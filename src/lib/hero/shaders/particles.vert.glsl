@@ -13,6 +13,7 @@ uniform vec2 uField;        // viewport size in CSS px
 uniform vec2 uShaftDir;     // unit vector the dust settles along
 uniform vec4 uNameBox;      // x, y, w, h of the headline in CSS px (viewport space)
 uniform float uMorph;       // 0 dust … 1 name
+uniform float uSettle;      // 0 name motes lit … 1 name motes gone (the typeset name has taken over)
 uniform float uDissolve;    // 0 name … 1 released
 uniform float uAmbient;     // alpha level once dissolved
 uniform float uAmbientKeep; // fraction of motes kept once dissolved
@@ -28,10 +29,6 @@ uniform float uGlobalAlpha;
 varying float vAlpha;
 varying float vBright;
 varying float vWarmth;
-
-float easeOutCubic(float x) {
-  return 1.0 - pow(1.0 - x, 3.0);
-}
 
 // Displacement from one disturbance (x, y, strength, radius), stretched along `vdir` by `elong`.
 vec2 puff(vec2 p, vec4 t, vec2 vdir, float elong) {
@@ -70,15 +67,18 @@ void main() {
     snoise(vec3(aTarget.yx * 6.0, t * 0.18 + 3.0) + aSeed.zyx * 5.0)
   ) * 1.2;
 
-  // 3. Staggered morph (sweeps left to right with randomness) and staggered release.
+  // 3. Staggered morph (sweeps left to right with randomness) and staggered release. Each mote
+  //    flies for 60% of the morph with an ease-in-out, so the travel itself is visible.
   float stagger = mix(aSeed.x, aTarget.x, 0.6);
-  float m = easeOutCubic(clamp((uMorph - stagger * 0.45) / 0.55, 0.0, 1.0));
+  float m = clamp((uMorph - stagger * 0.4) / 0.6, 0.0, 1.0);
+  m = m * m * (3.0 - 2.0 * m);
   float dz = clamp((uDissolve - aSeed.y * 0.5) / 0.5, 0.0, 1.0);
   dz = dz * dz * (3.0 - 2.0 * dz);
   float hold = m * (1.0 - dz) * aHasTarget;
 
   // 4. Flight path: an arc through the drift on the way in; a small sink on the way out.
-  vec2 arc = drift.yx * 1.5 * sin(hold * PI) + vec2(0.0, 90.0) * sin(dz * PI) * aHasTarget * m;
+  vec2 arc = (drift.yx * 1.5 + vec2(0.0, -40.0 * aSeed.z)) * sin(hold * PI)
+    + vec2(0.0, 90.0) * sin(dz * PI) * aHasTarget * m;
   vec2 p = mix(pA, tgt, hold) + arc;
 
   // 5. Pointer: a damped field with a wake, plus decaying trail puffs.
@@ -98,9 +98,15 @@ void main() {
   float shimmer = 0.78 + 0.22 * sin(t * (1.2 + 2.4 * aSeed.y) + aSeed.z * 6.2832);
   float level = mix(1.0, uAmbient, smoothstep(0.2, 1.0, uDissolve));
   float keep = mix(1.0, step(aSeed.z, uAmbientKeep), smoothstep(0.3, 1.0, uDissolve));
-  vAlpha = uGlobalAlpha * level * keep * shimmer * mix(0.35, 1.0, 1.0 - dof) * mix(0.55, 1.0, hold);
+  // Once settled, name motes hand over to the headline (staggered per mote) and stay gone.
+  float settle = smoothstep(0.0, 1.0, clamp((uSettle - aSeed.w * 0.4) / 0.6, 0.0, 1.0)) * aHasTarget;
+  vAlpha = uGlobalAlpha * level * keep * shimmer * mix(0.35, 1.0, 1.0 - dof) * mix(0.55, 0.85, hold);
+  vAlpha *= 1.0 - settle;
   vBright = mix(0.45, 1.0, 1.0 - dof) * mix(0.6, 1.0, hold) * shimmer * mix(0.9, 1.1, aTarget.z);
   vWarmth = aWarmth;
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 0.0, 1.0);
+  // Invisible motes are clipped away rather than rasterised.
+  gl_Position = vAlpha > 0.002
+    ? projectionMatrix * modelViewMatrix * vec4(p, 0.0, 1.0)
+    : vec4(2.0, 2.0, 2.0, 1.0);
 }

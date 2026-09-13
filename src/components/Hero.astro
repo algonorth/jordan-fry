@@ -34,11 +34,21 @@ import { telHref } from '../data/site';
 </section>
 
 <style>
-  /* The particles form the same glyphs on top; once they do, the crisp name recedes to a substrate. */
-  .hero-name {
-    transition: opacity 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  /*
+   * Intro choreography (live particle mode only; see HeroCanvas.astro and lib/hero/index.ts).
+   * The name appears exactly once, formed by the dust: `html[data-hero-intro="pending"]` (set inline
+   * before first paint when the hero will run) and then `.is-forming` on the hero keep the headline
+   * invisible while the motes drift and fly into the glyphs; `.is-lit` raises it to 100% while the
+   * name motes fade out, so the dust becomes the typeset name. Without WebGL, or if the hero fails
+   * to start, the flag is cleared and the headline simply shows. The hero runs regardless of the
+   * OS reduced-motion flag, so the transition below is exempted from the global reset in global.css.
+   */
+  html[data-hero-intro='pending'] .hero-name,
+  [data-hero].is-forming .hero-name {
+    opacity: 0;
   }
   [data-hero].is-lit .hero-name {
-    opacity: 0.32;
+    opacity: 1;
+    transition: opacity 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
 </style>

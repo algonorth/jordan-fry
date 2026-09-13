@@ -1,6 +1,7 @@
 /**
  * "Sawdust forms the name": mounts the particle hero on a canvas behind the page.
- * The HTML <h1> is always the real headline; the dust forms the same glyphs on top of it.
+ * The HTML <h1> is always the real headline. In live mode it stays invisible while the dust drifts
+ * and flies into its glyphs, then the name motes fade out as the headline rises to full strength.
  */
 import { OrthographicCamera, Scene, WebGLRenderer } from 'three';
 import { createParticles } from './particles';
@@ -22,6 +23,12 @@ export interface HeroOptions {
   lineSelector?: string;
   tier?: QualityTier | 'auto';
   allowSoftwareGL?: boolean;
+  /**
+   * `true` renders one finished frame and never animates. Defaults to `false`: Windows reports
+   * `prefers-reduced-motion` whenever "Show animations in Windows" is off, which is common on
+   * machines that have never asked for it, and the hero is drifting dust with no parallax or zoom,
+   * so the OS flag is not consulted (user decision). Pass `'auto'` to honour it.
+   */
   reducedMotion?: boolean | 'auto';
   debug?: boolean;
   onReady?: () => void;
@@ -39,8 +46,7 @@ const live = new Set<HeroHandle>();
 
 export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): Promise<HeroHandle> {
   const reduceMq = matchMedia('(prefers-reduced-motion: reduce)');
-  const reduced =
-    opts.reducedMotion === undefined || opts.reducedMotion === 'auto' ? reduceMq.matches : opts.reducedMotion;
+  const reduced = opts.reducedMotion === 'auto' ? reduceMq.matches : Boolean(opts.reducedMotion);
   const tier: QualityTier = opts.tier === undefined || opts.tier === 'auto' ? pickTier() : opts.tier;
   const cfg = TIERS[tier];
 
@@ -182,8 +188,14 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   let carry = 0;
   let skip = false;
   let ready = false;
+  let forming = false;
   let lit = false;
   let morphStart = -1;
+  // Intro beats, in seconds of rendered time after the first frame: the canvas fades in over
+  // 0.6s while the headline hands off to the dust; the dust drifts alone; then it flies in.
+  const DRIFT_ALONE = 1.6;
+  const MORPH_SECS = 2.6;
+  const SETTLE_SECS = 1.6; // name motes fade out while the headline rises (`.is-lit`)
 
   const renderOnce = () => {
     updateNameBox();
@@ -209,7 +221,11 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     clock += dt;
 
     uniforms.uTime.value = clock % 3600;
-    if (morphStart >= 0) uniforms.uMorph.value = Math.min(1, Math.max(0, (clock - morphStart) / 1.8));
+    if (morphStart >= 0) {
+      const t = clock - morphStart;
+      uniforms.uMorph.value = Math.min(1, Math.max(0, t / MORPH_SECS));
+      uniforms.uSettle.value = Math.min(1, Math.max(0, (t - MORPH_SECS) / SETTLE_SECS));
+    }
     uniforms.uDissolve.value +=
       (scroll.dissolveTarget - uniforms.uDissolve.value) * (1 - Math.exp(-dt / 0.14));
 
@@ -224,11 +240,13 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
 
     if (!ready) {
       ready = true;
+      forming = true;
       canvas.classList.add('is-live');
-      morphStart = clock + 0.6;
+      opts.heroEl.classList.add('is-forming');
+      morphStart = clock + DRIFT_ALONE;
       opts.onReady?.();
     }
-    if (!lit && morphStart >= 0 && clock >= morphStart) {
+    if (!lit && morphStart >= 0 && clock >= morphStart + MORPH_SECS) {
       lit = true;
       opts.heroEl.classList.add('is-lit');
     }
@@ -246,6 +264,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
 
   if (mode === 'static') {
     uniforms.uMorph.value = 1;
+    uniforms.uSettle.value = 1;
     uniforms.uDissolve.value = 0;
     uniforms.uTime.value = 12;
     renderOnce();
@@ -295,10 +314,11 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     e.preventDefault();
     stop();
     canvas.classList.remove('is-live');
-    opts.heroEl.classList.remove('is-lit');
+    opts.heroEl.classList.remove('is-forming', 'is-lit');
   };
   const onRestored = () => {
     canvas.classList.add('is-live');
+    if (forming) opts.heroEl.classList.add('is-forming');
     if (lit) opts.heroEl.classList.add('is-lit');
     if (mode === 'static') renderOnce();
     else start();
@@ -333,19 +353,21 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
       renderer.dispose();
       renderer.forceContextLoss();
       canvas.classList.remove('is-live', 'is-static');
-      opts.heroEl.classList.remove('is-lit');
+      opts.heroEl.classList.remove('is-forming', 'is-lit');
       live.delete(handle);
     },
   };
   live.add(handle);
 
-  // Reduced-motion preference flipped while open: remount in the other mode.
-  const onReduceChange = () => {
-    handle.dispose();
-    void mountHero(canvas, opts);
-  };
-  reduceMq.addEventListener('change', onReduceChange, { once: true });
-  dispose.push(() => reduceMq.removeEventListener('change', onReduceChange));
+  // In 'auto' mode a preference flipped while open remounts in the other mode.
+  if (opts.reducedMotion === 'auto') {
+    const onReduceChange = () => {
+      handle.dispose();
+      void mountHero(canvas, opts);
+    };
+    reduceMq.addEventListener('change', onReduceChange, { once: true });
+    dispose.push(() => reduceMq.removeEventListener('change', onReduceChange));
+  }
 
   return handle;
 }

@@ -220,6 +220,13 @@ html:has(dialog[open]) {
     opacity: 1;
     transform: none;
   }
+  /* The particle hero ignores the OS flag (see lib/hero/index.ts); keep its handoff fades intact. */
+  #hero-canvas {
+    transition-duration: var(--duration-slow) !important;
+  }
+  [data-hero].is-lit .hero-name {
+    transition-duration: 1.8s !important;
+  }
 }
 
 /* ------------------------------------------------------------------ */

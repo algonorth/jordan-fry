@@ -58,10 +58,14 @@ Without a key the form is omitted and the contact section shows the call, text a
 ## The hero
 
 Warm dust motes drift in a light shaft, coalesce into the headline, part around the pointer, and
-dissolve as the page scrolls. The `<h1>` is real text painted first (it is the LCP element); the
-canvas is decorative and lazy-loaded after the page is idle. Quality tiers (60k / 24k / 8k motes) are
-picked from the device and stepped down if frames run long. `prefers-reduced-motion` renders one still
-frame. Without WebGL the CSS light shaft and the headline are the designed state.
+dissolve as the page scrolls. The `<h1>` is real text in the HTML; when the hero is going to run, a
+tiny inline probe keeps it invisible from first paint so the name appears exactly once, formed by the
+dust: the motes drift for a beat, fly in and form the glyphs over about 2.5s, then fade out as the
+typeset headline rises to full strength. Without WebGL, or if the hero fails to start, the headline
+simply shows. Quality tiers (60k / 24k / 8k motes) are
+picked from the device and stepped down if frames run long. The hero ignores the OS reduced-motion
+flag on purpose (Windows reports it whenever "Show animations in Windows" is off); `?motion=static`
+renders one still frame. Without WebGL the CSS light shaft and the headline are the designed state.
 
 Debugging: `/?debug=hero` overlays the sampled glyph targets on the headline; `/?gl=software` allows
 software WebGL (used by the tests).

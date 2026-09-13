@@ -1,8 +1,13 @@
 ---
 /**
  * Fixed layers behind the page (rendered into the layout's backdrop slot on the home page only):
- * a CSS light shaft that scrolls away with the hero and the particle canvas. Without WebGL or with
- * reduced motion, what is here is already the designed static state.
+ * a CSS light shaft that scrolls away with the hero and the particle canvas. Without WebGL, what is
+ * here is already the designed static state. The hero deliberately ignores the OS reduced-motion
+ * flag (see lib/hero/index.ts); `?motion=static` renders the finished frame for checks.
+ *
+ * The inline script below runs before the headline is parsed: if the hero is going to run it marks
+ * `<html data-hero-intro="pending">`, which keeps the headline invisible so the dust can form it. Every
+ * path that does not reach a live first frame clears the flag (fallback, static, failure, timeout).
  */
 ---
 
@@ -23,27 +28,41 @@
   }
 </style>
 
+<script is:inline>
+  // Pre-paint capability probe (a few ms). Devices without a usable GPU never download the three.js
+  // chunk and never hide the headline. `?gl=software` allows a software renderer (tests).
+  (function () {
+    if (!('WebGL2RenderingContext' in window)) return;
+    try {
+      var soft = /[?&]gl=software(?:&|$)/.test(location.search);
+      var gl = document
+        .createElement('canvas')
+        .getContext('webgl2', { failIfMajorPerformanceCaveat: !soft });
+      if (!gl) return;
+      var lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+      document.documentElement.dataset.heroIntro = 'pending';
+    } catch (e) {
+      /* no hero */
+    }
+  })();
+</script>
+
 <script>
-  // The headline is already painted; the particle module is fetched at idle time, after load.
+  // The particle module is fetched at idle time, after load, only when the inline probe passed.
   const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
   const nameEl = document.getElementById('hero-name');
   const heroEl = document.querySelector<HTMLElement>('[data-hero]');
   const params = new URLSearchParams(location.search);
   const allowSoftwareGL = params.get('gl') === 'software';
-  /** Cheap capability probe so devices without a usable GPU never download or parse the three.js chunk. */
-  const canRender = () => {
-    if (!('WebGL2RenderingContext' in window)) return false;
-    try {
-      const gl = document
-        .createElement('canvas')
-        .getContext('webgl2', { failIfMajorPerformanceCaveat: !allowSoftwareGL });
-      gl?.getExtension('WEBGL_lose_context')?.loseContext();
-      return Boolean(gl);
-    } catch {
-      return false;
-    }
+  const pending = document.documentElement.dataset.heroIntro === 'pending';
+  /** Lets the headline show. Live mode calls it on its first frame, after `.is-forming` took over. */
+  const reveal = () => {
+    delete document.documentElement.dataset.heroIntro;
   };
-  if (canvas && nameEl && heroEl && canRender()) {
+  if (canvas && nameEl && heroEl && pending) {
+    // Safety net: if the hero has not rendered a frame within a few seconds of load, show the name.
+    const guard = setTimeout(reveal, 6000);
     const start = () =>
       import('../lib/hero')
         .then((m) =>
@@ -51,10 +70,18 @@
             nameEl,
             heroEl,
             allowSoftwareGL,
+            reducedMotion: params.get('motion') === 'static',
             debug: params.get('debug') === 'hero',
+            onReady: () => {
+              clearTimeout(guard);
+              reveal();
+            },
           }),
         )
-        .catch(() => {});
+        .then((h) => {
+          if (h.mode !== 'live') reveal();
+        })
+        .catch(reveal);
     const schedule = () =>
       'requestIdleCallback' in window
         ? requestIdleCallback(start, { timeout: 1500 })

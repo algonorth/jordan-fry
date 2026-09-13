@@ -26,6 +26,7 @@ export type HeroUniforms = {
   uShaftDir: { value: Vector2 };
   uNameBox: { value: Vector4 };
   uMorph: { value: number };
+  uSettle: { value: number };
   uDissolve: { value: number };
   uAmbient: { value: number };
   uAmbientKeep: { value: number };
@@ -127,6 +128,7 @@ export function createParticles(
     uShaftDir: { value: new Vector2(0.28, 0.96) },
     uNameBox: { value: new Vector4(0, 0, 1, 1) },
     uMorph: { value: 0 },
+    uSettle: { value: 0 },
     uDissolve: { value: 0 },
     uAmbient: { value: 0.35 },
     uAmbientKeep: { value: 0.45 },

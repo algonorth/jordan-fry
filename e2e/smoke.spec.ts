@@ -11,18 +11,49 @@ test.describe('home', () => {
     const h1 = page.locator('#hero-name');
     await expect(h1).toBeVisible();
     await expect(h1).toHaveText(/Jordan\s*Fry/);
+    // The headline is hidden from first paint while the dust forms it, then shown in full. The
+    // pre-paint flag may already have handed over to `.is-forming` by the time we look.
+    await expect(h1).toHaveCSS('opacity', '0');
     await expect(page.locator('#hero-canvas')).toHaveClass(/(?:^|\s)is-live(?:\s|$)/, { timeout: 20_000 });
-    await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-lit(?:\s|$)/, { timeout: 20_000 });
+    await expect(page.locator('html')).not.toHaveAttribute('data-hero-intro', 'pending');
+    await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-forming(?:\s|$)/);
+    await expect(h1).toHaveCSS('opacity', '0');
+    await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-lit(?:\s|$)/, { timeout: 30_000 });
+    await expect(h1).toHaveCSS('opacity', '1', { timeout: 5_000 });
     expect(errors).toEqual([]);
   });
 
-  test('reduced motion renders a static hero and keeps the headline at full opacity', async ({ browser }) => {
+  test('the OS reduced-motion flag does not stop the intro', async ({ browser }) => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     await page.goto('/?gl=software');
+    await expect(page.locator('#hero-canvas')).toHaveClass(/(?:^|\s)is-live(?:\s|$)/, { timeout: 20_000 });
+    await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-forming(?:\s|$)/);
+    await expect(page.locator('#hero-canvas')).toHaveCSS('transition-duration', '0.6s');
+    await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-lit(?:\s|$)/, { timeout: 30_000 });
+    await ctx.close();
+  });
+
+  test('?motion=static renders the finished frame and keeps the headline at full opacity', async ({ page }) => {
+    await page.goto('/?gl=software&motion=static');
     await expect(page.locator('#hero-canvas')).toHaveClass(/(?:^|\s)is-static(?:\s|$)/, { timeout: 20_000 });
     await expect(page.locator('[data-hero]')).not.toHaveClass(/(?:^|\s)is-lit(?:\s|$)/);
+    await expect(page.locator('html')).not.toHaveAttribute('data-hero-intro', 'pending');
     await expect(page.locator('#hero-name')).toHaveCSS('opacity', '1');
+  });
+
+  test('without WebGL the headline is simply visible', async ({ browser }) => {
+    const ctx = await browser.newContext();
+    await ctx.addInitScript(() => {
+      // @ts-expect-error simulate a browser with no WebGL2
+      delete window.WebGL2RenderingContext;
+    });
+    const page = await ctx.newPage();
+    await page.goto('/');
+    await expect(page.locator('html')).not.toHaveAttribute('data-hero-intro', 'pending');
+    await expect(page.locator('#hero-name')).toHaveCSS('opacity', '1');
+    await page.waitForTimeout(1500);
+    await expect(page.locator('#hero-canvas')).not.toHaveClass(/(?:^|\s)is-live(?:\s|$)/);
     await ctx.close();
   });
 

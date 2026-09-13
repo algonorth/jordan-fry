@@ -89,7 +89,8 @@ more generous because this site is editorial.
 
 Durations: `--duration-fast` 150ms, `--duration-base` 300ms, `--duration-slow` 600ms. Easing:
 `ease-out-soft` `cubic-bezier(0.22, 1, 0.36, 1)`. Everything under `prefers-reduced-motion: reduce`
-collapses to instant. No parallax, counters, text splitting, or scroll hijacking.
+collapses to instant, except the particle hero and its headline handoff (see "Hero" below). No
+parallax, counters, text splitting, or scroll hijacking.
 
 ## Primitive map
 
@@ -122,7 +123,11 @@ hamburger at any size. Contact is not a nav item; it is the CTA.
 **Hero** — `relative min-h-[92svh] flex flex-col justify-end pb-20 md:pb-28`, 92svh so the first
 project image peeks in as the scroll cue. `h1#hero-name` = two block spans (`Jordan` / `Fry`),
 `font-display text-display font-[350] text-fg`, `font-variation-settings: "opsz" 144`; fully visible at
-first paint (LCP), dimmed to 32% by `.is-lit` while the particles form the same glyphs. Positioning
+`html[data-hero-intro="pending"]` (set by an inline pre-paint probe when the hero will run) keeps it
+invisible so the name appears exactly once, formed by the dust; `.is-forming` on the hero takes over
+on the first rendered frame, and `.is-lit` raises the headline to 100% over 1.8s while the name motes
+fade out, so the dust becomes the typeset name. Without WebGL the flag is never set and the headline
+is the LCP element as plain text; with it, the lead paragraph is. Positioning
 line `mt-6 max-w-xl text-lead text-fg-2 text-pretty`. Actions `mt-10 flex flex-wrap items-center
 gap-x-8 gap-y-4`: one primary (mobile "Call Jordan" `tel:`, md+ "Start a conversation" `#contact`) +
 one quiet link "See the work".
@@ -179,6 +184,8 @@ Stateless vertex-shader particles (one `Points` draw call, no GPGPU): amber dust
 light shaft, coalesces into the h1's glyphs (targets sampled from the same font at a fixed 200px,
 normalised to the measured h1 line boxes), parts around a damped pointer with a decaying trail, and
 dissolves into sparse ambient dust as the hero scrolls away. Orthographic camera in CSS pixels.
-Quality tiers 60k / 24k / 8k motes with a frame-time probe that steps down. Reduced motion renders one
-static frame. WebGL absent: the CSS light shaft and the full-opacity h1 are the designed state.
+Quality tiers 60k / 24k / 8k motes with a frame-time probe that steps down. The OS reduced-motion
+flag is ignored on purpose (Windows sets it whenever "Show animations" is off, and the dust has no
+parallax or zoom); `?motion=static` renders the finished frame for checks. WebGL absent: the CSS light
+shaft and the full-opacity h1 are the designed state.
 Additive, premultiplied sprites; no tone mapping; colors from the `hero-*` tokens.
