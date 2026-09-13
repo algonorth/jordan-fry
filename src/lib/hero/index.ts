@@ -210,7 +210,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   // 0.6s while the headline hands off to the dust; the dust drifts alone; then it flies in.
   const DRIFT_ALONE = 0.9;
   const MORPH_SECS = 2.1;
-  const SETTLE_SECS = 1.3; // name motes fade out while the headline rises (`.is-lit`)
+  const SETTLE_SECS = 0.9; // name motes fade out while the headline rises (`.is-lit`)
 
   const renderOnce = () => {
     updateNameBox();

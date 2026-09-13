@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import WorkImage from '../../components/WorkImage.astro';
 import Lightbox from '../../components/Lightbox.astro';
+import ProjectMeta from '../../components/ProjectMeta.astro';
 import { meta, work, nav } from '../../data/copy';
 import { withBase } from '../../lib/url';
 
@@ -62,21 +63,22 @@ const meta3 = [
           priority
         />
       </figure>
-      <div class:list={[orientation === 'portrait' ? 'lg:col-span-6' : 'lg:col-span-5', 'lg:pb-4']}>
+      <div
+        class:list={[
+          orientation === 'portrait'
+            ? 'lg:col-span-6 lg:flex lg:h-full lg:flex-col lg:justify-end'
+            : 'lg:col-span-5',
+          'lg:pb-4',
+        ]}
+      >
         <p class="text-label uppercase text-fg-3 tabular-nums">{`${entry.data.type} · ${year}`}</p>
         <h1 class="mt-5 font-display text-h1 text-fg">{title}</h1>
         <p class="mt-6 max-w-2xl text-lead text-fg-2">{summary}</p>
+        {orientation === 'portrait' && <ProjectMeta rows={meta3} class="mt-10 lg:mt-12" />}
       </div>
     </div>
     <div class="container-site">
-      <dl class="mt-10 grid gap-6 border-y border-line py-6 sm:grid-cols-3">
-        {meta3.map((m) => (
-          <div>
-            <dt class="text-label uppercase text-fg-3">{m.label}</dt>
-            <dd class:list={['mt-1 text-sm text-fg', m.cls]}>{m.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {orientation !== 'portrait' && <ProjectMeta rows={meta3} class="mt-10" />}
       <div class="mt-10 max-w-2xl space-y-5 text-body text-fg-2">
         <Content />
       </div>

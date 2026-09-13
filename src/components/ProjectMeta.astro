@@ -1,0 +1,17 @@
+---
+/** Location / Scope / Year rows of a project, set as a title block strip. */
+interface Props {
+  rows: { label: string; value: string; cls: string }[];
+  class?: string;
+}
+const { rows, class: className } = Astro.props;
+---
+
+<dl class:list={['grid gap-6 border-y border-line py-6 sm:grid-cols-3', className]}>
+  {rows.map((m) => (
+    <div>
+      <dt class="text-label uppercase text-fg-3">{m.label}</dt>
+      <dd class:list={['mt-1 text-sm text-fg', m.cls]}>{m.value}</dd>
+    </div>
+  ))}
+</dl>

@@ -22,14 +22,13 @@ const featured = (await getCollection('work', ({ data }) => data.featured)).sort
   <Hero />
   <section id="work" aria-labelledby="work-h" class="scroll-mt-20 pt-4 pb-section md:pt-6">
     <div class="container-wide">
-      <SectionHead index={sections.work.index} label={work.heading} id="work-h" static />
-      <div class="mt-10 lg:mt-14">
-        <WorkGrid entries={featured} peekFirst />
-      </div>
-      <div class="mt-12 flex justify-end lg:mt-16">
-        <a href={withBase('/work/')} class="link-quiet focus-ring rounded-sm">
+      <SectionHead index={sections.work.index} label={work.heading} id="work-h" static>
+        <a slot="aside" href={withBase('/work/')} class="link-quiet focus-ring rounded-sm">
           {nav.allWork}
         </a>
+      </SectionHead>
+      <div class="mt-10 lg:mt-14">
+        <WorkGrid entries={featured} peekFirst />
       </div>
     </div>
   </section>

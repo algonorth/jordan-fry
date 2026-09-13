@@ -14,8 +14,8 @@ const { entries, peekFirst = false } = Astro.props;
  * are generated at exactly these aspects (scripts/make-drawings.mjs) so no cover is ever cropped.
  */
 const pattern = [
-  { span: 'lg:col-span-7', aspect: 'aspect-[4/3]', offset: '' },
-  { span: 'lg:col-span-5', aspect: 'aspect-[3/4]', offset: 'lg:mt-24' },
+  { span: 'lg:col-span-7', aspect: 'aspect-[4/3]', offset: 'lg:mt-24' },
+  { span: 'lg:col-span-5', aspect: 'aspect-[3/4]', offset: '' },
   { span: 'lg:col-span-5', aspect: 'aspect-square', offset: 'lg:-mt-16' },
   { span: 'lg:col-span-7', aspect: 'aspect-[16/10]', offset: '' },
   { span: 'md:col-span-2 lg:col-span-8 lg:col-start-3', aspect: 'aspect-[3/2]', offset: '' },
@@ -27,7 +27,10 @@ const pattern = [
   {entries.map((entry, i) => {
     const p = pattern[i % pattern.length]!;
     return (
-      <li class:list={[p.span, p.offset]} data-reveal={peekFirst && i === 0 ? undefined : ''}>
+      <li
+        class:list={[p.span, p.offset, 'md:self-end lg:self-auto']}
+        data-reveal={peekFirst && i === 0 ? undefined : ''}
+      >
         <WorkCard entry={entry} aspect={p.aspect} index={i} />
       </li>
     );

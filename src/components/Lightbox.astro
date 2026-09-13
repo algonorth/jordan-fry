@@ -73,7 +73,7 @@ const arrow = (d: string) =>
     <>
       <button
         type="button"
-        class:list={[btn, 'absolute top-1/2 left-4 hidden -translate-y-1/2 md:inline-flex']}
+        class:list={[btn, 'absolute top-1/2 left-4 -translate-y-1/2 max-md:hidden']}
         data-lightbox-prev
         aria-label="Previous photo"
       >
@@ -81,7 +81,7 @@ const arrow = (d: string) =>
       </button>
       <button
         type="button"
-        class:list={[btn, 'absolute top-1/2 right-4 hidden -translate-y-1/2 md:inline-flex']}
+        class:list={[btn, 'absolute top-1/2 right-4 -translate-y-1/2 max-md:hidden']}
         data-lightbox-next
         aria-label="Next photo"
       >

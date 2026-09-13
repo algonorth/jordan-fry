@@ -79,7 +79,8 @@ turns `inline-block` into an `inline-size` (this bit us once).
 
 ### Rhythm
 
-- `py-section` = `clamp(5rem, 3rem + 8vw, 10rem)` (80 → 160 px) on every section.
+- `py-section` = `clamp(4rem, 2rem + 6vw, 7.5rem)` (64 → 120 px) on every section; two stacked
+  sections leave at most ~240px between the last element and the next eyebrow.
 - Section head → content: `mt-12 lg:mt-16`; `mt-6` lead under a heading; `mt-10` action rows.
 - `container-site` (72rem) for prose sections, `container-wide` (85rem) for work grids; both pad `px-5 sm:px-8 lg:px-10`.
 - Grids: `gap-y-14 gap-x-6 lg:gap-x-8 lg:gap-y-16` (work), `gap-10 lg:gap-16` (two-column sections), `gap-x-12 gap-y-16` (testimonials).
@@ -98,8 +99,9 @@ more generous because this site is editorial.
 | Rule draw-in    | `.rule` (1px `line`) as a direct child of a `data-reveal` group scales from `scaleX(0)` to 1 over 1.2s, origin left                                                                                                                          |
 | Image wipe      | `.reveal-img` (the figure) starts `clip-path: inset(0 0 100% 0 round 8px)` and opens over 1.1s; its `.work-img` settles from `scale: 1.08` to 1 over 1.5s; the card itself is `.reveal-self` (no fade), its `.card-meta` follows 350ms later |
 | Image hover     | `transform: scale(1.03)` + `brightness(1.06)` over 0.8s inside an `overflow-hidden` wrapper; card title turns `amber-300`                                                                                                                    |
+| Lightbox swipe  | a mostly horizontal pointer travel ≥ 40px on the stage moves one photo (`lib/lightbox.ts`)                                                                                                                                                   |
 | Nav underline   | `link-nav`: a 1px `currentColor` underline grows from the left over `--duration-base`; stays for `aria-current="page"`                                                                                                                       |
-| Header          | gains `bg-ink-950/80 backdrop-blur-md border-b border-line` past 24px of scroll                                                                                                                                                              |
+| Header          | gains `bg-ink-950/95 border-b border-line` past 24px of scroll (no backdrop blur: it would smear the dust behind it into an amber blob; 95% so display type never ghosts through)                                                            |
 | Call bar        | `translate-y-full → 0` over `--duration-base`                                                                                                                                                                                                |
 | Page transition | `@view-transition { navigation: auto }`; root fades out 0.3s and fades/rises in 0.55s (8px); `view-transition-name: cover-<id>` on the cover figure in the grid and on the detail page morphs the cover                                      |
 | Hero particles  | see "Hero" below                                                                                                                                                                                                                             |
@@ -111,22 +113,22 @@ handoff (see "Hero" below). No parallax, counters, text splitting, or scroll hij
 
 ## Primitive map
 
-| Need                           | Use                                                                                                                                                                                                                                                                        |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Focus                          | `focus-ring` utility (2px amber outline, 4px offset) on every interactive element                                                                                                                                                                                          |
-| Primary action                 | `btn-primary`: `inline-flex h-14 items-center px-8 rounded-md bg-amber-400 text-ink-950 font-medium shadow-glow hover:bg-amber-300 hover:shadow-glow-hover`                                                                                                                |
-| Quiet action                   | `link-quiet`: `text-sm text-fg-2 underline underline-offset-8 decoration-line-strong hover:text-fg hover:decoration-amber-400`                                                                                                                                             |
-| Nav link                       | `link-nav` (see Motion)                                                                                                                                                                                                                                                    |
-| Bordered action (header phone) | `inline-flex h-10 items-center px-4 rounded-md border border-line-strong text-sm font-medium text-fg hover:border-amber-400`                                                                                                                                               |
-| Section head                   | `SectionHead.astro`: `.rule` + `mt-5` eyebrow row (`text-label uppercase text-fg-3`, index in `text-oak-300 tabular-nums`, optional `slot="aside"`) + optional `mt-8 md:mt-10 text-h2` title; without a title the eyebrow is the section's `h2`; `static` skips the reveal |
-| Label / eyebrow                | `text-label uppercase text-fg-3` (or `text-oak-300` for emphasis and indices)                                                                                                                                                                                              |
-| Hairline divider               | `border-t border-line`; `.rule` when it should draw in                                                                                                                                                                                                                     |
-| Input                          | `block w-full h-14 px-0 bg-transparent border-0 border-b border-line-strong text-body text-fg placeholder:text-fg-3 focus:border-amber-400 focus:outline-none transition-colors` with a visible `<label class="block text-label uppercase text-fg-3 mb-2">`                |
-| Modal                          | native `<dialog>` (`Lightbox.astro`), `showModal()`, `closedby="any"` + backdrop-click fallback; visible `n / N` counter in `text-label text-oak-300` and the photo's alt as a `text-sm text-fg-2` caption under the image                                                 |
-| Disclosure                     | native `<details>` / `<summary>` (services rows)                                                                                                                                                                                                                           |
-| Status feedback                | `role="status"` block swapped in place; never `alert()`                                                                                                                                                                                                                    |
-| Image                          | `WorkImage.astro` (wraps `astro:assets` `<Image>`; responsive widths only for raster sources); image grounds are `bg-ink-900` so a drawing sheet's edge is invisible                                                                                                       |
-| Grain                          | `.grain`: fixed, `z-index: 45`, `pointer-events: none`, one 180px `feTurbulence` tile tinted linen at 7% opacity, rendered once by `Base.astro`                                                                                                                            |
+| Need                           | Use                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Focus                          | `focus-ring` utility (2px amber outline, 4px offset) on every interactive element                                                                                                                                                                                                                                                                         |
+| Primary action                 | `btn-primary`: `inline-flex h-14 items-center px-8 rounded-md bg-amber-400 text-ink-950 font-medium shadow-glow hover:bg-amber-300 hover:shadow-glow-hover`                                                                                                                                                                                               |
+| Quiet action                   | `link-quiet`: `text-sm text-fg-2 underline underline-offset-8 decoration-line-strong hover:text-fg hover:decoration-amber-400`                                                                                                                                                                                                                            |
+| Nav link                       | `link-nav` (see Motion)                                                                                                                                                                                                                                                                                                                                   |
+| Bordered action (header phone) | `inline-flex h-10 items-center px-4 rounded-md border border-line-strong text-sm font-medium text-fg hover:border-amber-400`                                                                                                                                                                                                                              |
+| Section head                   | `SectionHead.astro`: `.rule` + `mt-5` eyebrow row (`text-label uppercase text-fg-3`, index in `text-oak-300 tabular-nums`, optional `slot="aside"`) + optional `mt-8 md:mt-10 text-h2` title; without a title the eyebrow is the section's `h2`; `static` skips the reveal                                                                                |
+| Label / eyebrow                | `text-label uppercase text-fg-3` (or `text-oak-300` for emphasis and indices)                                                                                                                                                                                                                                                                             |
+| Hairline divider               | `border-t border-line`; `.rule` when it should draw in                                                                                                                                                                                                                                                                                                    |
+| Input                          | `block w-full h-14 px-0 bg-transparent border-0 border-b border-line-strong text-body text-fg placeholder:text-fg-3 focus:border-amber-400 focus:outline-none transition-colors` with a visible `<label class="block text-label uppercase text-fg-3 mb-2">`                                                                                               |
+| Modal                          | native `<dialog>` (`Lightbox.astro`), `showModal()`, `closedby="any"` + backdrop-click fallback; the stage is a flex column so the `n / N` counter (`text-label text-oak-300`) and the alt caption (`text-sm text-fg-2`) sit directly under the photo; arrows float at the sides from md and sit in the caption row below it; swipe moves photos on touch |
+| Disclosure                     | native `<details>` / `<summary>` (services rows)                                                                                                                                                                                                                                                                                                          |
+| Status feedback                | `role="status"` block swapped in place; never `alert()`                                                                                                                                                                                                                                                                                                   |
+| Image                          | `WorkImage.astro` (wraps `astro:assets` `<Image>`; responsive widths only for raster sources); image grounds are `bg-ink-900` so a drawing sheet's edge is invisible                                                                                                                                                                                      |
+| Grain                          | `.grain`: fixed, `z-index: 45`, `pointer-events: none`, one 180px `feTurbulence` tile tinted linen at 7% opacity, rendered once by `Base.astro`                                                                                                                                                                                                           |
 
 ## Layout
 
@@ -146,42 +148,51 @@ Sections are numbered in page order (`sections` in `data/copy.ts`): 01 Selected 
 
 **Hero** — `relative min-h-[88svh] flex flex-col justify-end pb-16 md:pb-24`, 88svh so the first
 section head peeks in as the scroll cue (it is rendered `static`, without the reveal). Inside:
-`lg:grid lg:grid-cols-12 lg:items-end lg:gap-10`; the headline column is `lg:col-span-9`, the
-at-a-glance list `lg:col-span-3 justify-self-end text-right text-label uppercase text-fg-3
-space-y-3` (town, `Est. year`, `Licensed & insured`; hidden below lg). `h1#hero-name` = two block
+`lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10`: the headline column shrinks,
+the at-a-glance title block keeps its natural width at every lg width: `dl.border-y.border-line
+lg:grid-cols-3 divide-x divide-line`, each cell `px-5 py-4` with a `text-label` term (Based in /
+Since / Credentials) over a `text-sm text-fg` value; hidden below lg. `h1#hero-name` = two block
 spans (`Jordan` / `Fry`), `font-display text-display font-[350] text-fg`, `font-variation-settings:
 "opsz" 144`; `html[data-hero-intro="pending"]` (set by an inline pre-paint probe when the hero will
 run) keeps it invisible so the name appears exactly once, formed by the dust; `.is-forming` on the
-hero takes over on the first rendered frame, and `.is-lit` raises the headline to 100% over 1.8s
-while the name motes fade out. Without WebGL the flag is never set and the headline is the LCP
+hero takes over on the first rendered frame, and `.is-lit` raises the headline to 100% over 1.1s
+while the name motes fade out (drift 0.9s, flight 2.1s, settle 0.9s: the dust spells the name within
+about three seconds of the first frame and the typeset name is fully there a second later). Without WebGL the flag is never set and the headline is the LCP
 element as plain text; with it, the lead paragraph is. Positioning line `mt-8 max-w-xl text-lead
 text-fg-2 text-pretty`. Actions `mt-10 flex flex-wrap items-center gap-x-8 gap-y-4`: one primary
 (mobile "Call Jordan" `tel:`, md+ "Start a conversation" `#contact`) + one quiet link "See the work".
 
 **Work grid** — `SectionHead` (eyebrow only) then `mt-10 lg:mt-14`; `grid md:grid-cols-2
 lg:grid-cols-12 gap-y-14 gap-x-6 lg:gap-x-8 lg:gap-y-16` (one column on phones, two on tablets, the
-editorial 12-column rhythm from lg; the fifth card spans both tablet columns); pattern by index: `col-span-7 aspect-[4/3]`, `col-span-5
-aspect-[3/4] lg:mt-24`, `col-span-5 aspect-square lg:-mt-16`, `col-span-7 aspect-[16/10]`,
-`col-span-8 col-start-3 aspect-[3/2]`, `col-span-4 col-start-1 aspect-[3/4]` (no negative offset on
-the sixth: it would cover the fifth card's caption). Card (`WorkCard.astro`): `a.reveal-self.group`,
-cover `figure.reveal-img` with `view-transition-name`, then the caption row `.card-meta mt-4 flex
-flex-wrap items-baseline justify-between`: index `text-label text-oak-300 tabular-nums` + title
-`font-display text-h3 text-fg` on the left, `{type} · {town} · {year}` in `text-label uppercase
-text-fg-3` on the right. No hover scrim: the caption is always there, the image brightens and
-scales, the title turns amber. "All work" sits `mt-12 lg:mt-16 justify-end` under the home grid.
+editorial 12-column rhythm from lg; the fifth and sixth cards span both tablet columns; every card
+is `md:self-end lg:self-auto` so tablet captions share a baseline); pattern by index: `col-span-7
+aspect-[4/3] lg:mt-24`, `col-span-5 aspect-[3/4]`, `col-span-5 aspect-square lg:-mt-16`,
+`col-span-7 aspect-[16/10]`, `col-span-8 col-start-3 aspect-[3/2]`, `col-span-6 col-start-4
+aspect-[4/3]`. The offsets are tuned so the two cards of a row end within a few pixels of each other
+(the stagger sits at the top of the row, never as a void under a caption); the sixth is centred so
+the index never ends on a lone small card. Every
+cover sheet is generated at exactly its slot's aspect, so `object-cover` never crops a title block.
+Card (`WorkCard.astro`): `a.reveal-self.group`, cover `figure.reveal-img` with
+`view-transition-name`, then the caption `.card-meta mt-4 grid grid-cols-[2rem_1fr] gap-x-4`: index
+`text-label text-oak-300 tabular-nums`, title `font-display text-h3 text-fg`, and under it `{type} ·
+{town} · {year}` in `text-label uppercase text-fg-3`, the same two lines on every card. No hover
+scrim: the caption is always there, the image brightens and scales, the title turns amber. "All
+work" is the `aside` of the "01 Selected work" eyebrow row (`link-quiet`), not a row of its own.
 
 **Work index** — `pt-12 md:pt-20`; head block `mb-12 lg:mb-16` with a `text-label` count line
 (`6 projects · 2023–2025`, derived from the collection), `text-h1` title, `max-w-2xl text-lead` lead.
+The page closes (`mt-20 lg:mt-28`, `data-primary-cta`) with a `.rule`, "Have something like this in
+mind?" in `text-h3` and the primary "Start a conversation" button to `/#contact`.
 
 **Services** — `SectionHead` with title, then `ul.mt-12.lg:mt-16.border-t.border-line` of
 `<details class="disclosure group border-b border-line">`; summary `flex items-baseline gap-6
 md:gap-10 py-6 md:py-8 list-none cursor-pointer focus-ring`: index `text-label text-oak-300
 tabular-nums w-8`, name `font-display text-row group-hover:text-amber-300`, trailing hairline "+"
 rotating 45° when open; body `grid gap-8 md:gap-12 pb-10 ps-14 md:ps-18 md:grid-cols-[1fr_auto]`:
-the sentence `max-w-xl text-body text-fg-2` and, from `service.example`, that project's cover in a
-`md:w-64 aspect-[4/3] rounded-md` figure captioned `Example` (label) + title (`text-sm text-fg`,
-amber on hover), linking to the project. Multiple rows may stay open; height animates via
-`::details-content` where supported.
+the sentence `max-w-xl text-body text-fg-2` and, from `service.example`, that project's first
+detail sheet (`gallery[0]`, the cover as fallback) at its own aspect in a `md:w-80 rounded-md`
+figure captioned `Example` (label) + title (`text-sm text-fg`, amber on hover), linking to the
+project. Multiple rows may stay open; height animates via `::details-content` where supported.
 
 **About** — `SectionHead` with title; `mt-12 lg:mt-16 grid lg:grid-cols-12 gap-10 lg:gap-16
 items-start`; portrait `lg:col-span-5` as `.reveal-self > figure.reveal-img aspect-[4/5]
@@ -190,48 +201,54 @@ mt-6`); credential strip `mt-10 pt-8 border-t border-line flex flex-wrap gap-x-1
 text-label uppercase text-fg-3`, three plain-text items.
 
 **Testimonials** — `SectionHead` (eyebrow only, "Kind words"); `mt-12 lg:mt-16 grid lg:grid-cols-3
-gap-x-12 gap-y-16`; each `<figure>` opens with a `3.5rem` Fraunces “ in `text-amber-400` (`.mark`,
-`line-height 0.7`, aria-hidden), then `<blockquote class="quote text-quote font-[350] text-pretty">`
-
-- `<figcaption class="mt-6 text-sm">` name + `text-fg-3` " · town". Static.
+gap-x-12 gap-y-14`; each `<figure class="border-t border-line pt-6">` opens with its index (`01`,
+`text-label text-oak-300 tabular-nums`), then `<blockquote class="quote mt-6 text-quote font-[350]
+text-pretty">` + `<figcaption class="mt-6 text-sm">` name + `text-fg-3` " · town". Static.
 
 **Contact** — `SectionHead` with title; `mt-12 lg:mt-16 grid lg:grid-cols-12 gap-12 lg:gap-16`.
-Left `lg:col-span-5`: lead (`contact.lead` with the form, `contact.leadNoForm` without), `dl` of
-Call / Text (`md:hidden`) / Email / Hours rows ≥ 44px (hours derived from `site.hours` by
-`hoursDisplay`). Right `lg:col-span-6 lg:col-start-7`: the form when `PUBLIC_WEB3FORMS_KEY` is set
-(`space-y-8`, three underline inputs, amber submit `h-14 px-8`; on success the fieldset crossfades
-out and a `role="status" tabindex="-1"` block of the same height crossfades in), otherwise the
-Talk / Plan / Build steps as `ol.grid.gap-8.border-t.border-line.pt-8`, each `grid-cols-[3rem_1fr]`
-with an `oak-300` index, `text-h3` title and `text-body text-fg-2` sentence. With the form present
-the steps sit under the left column instead (`mt-12 pt-8 border-t`, label titles, `text-sm`).
+Left `lg:col-span-5`: lead (`contact.lead` with the form, `contact.leadNoForm` without), then the
+`data-primary-cta` block: `btn-primary` "Call (724) 555-0123" (`tel:`) with "Text instead" as a
+`link-quiet` beside it below md, and a `dl` of Email / Hours rows (hours derived from `site.hours`
+by `hoursDisplay`). Right `lg:col-span-6 lg:col-start-7`: the form when `PUBLIC_WEB3FORMS_KEY` is
+set (`space-y-8`, three underline inputs, amber submit `h-14 px-8`; on success the fieldset
+crossfades out and a `role="status" tabindex="-1"` block of the same height crossfades in),
+otherwise the Talk / Plan / Build steps as `ol.grid.gap-8.border-t.border-line.pt-8`, each
+`grid-cols-[3rem_1fr]` with an `oak-300` index, `text-h3` title and `text-body text-fg-2` sentence.
+With the form present the steps sit under the left column instead (`mt-12 pt-8 border-t`, label
+titles, `text-sm`).
 
-**Project detail** — the cover layout follows `orientation`. Landscape: full-bleed
-`figure.aspect-[3/2].max-h-[82svh].bg-ink-900` with `object-contain` (a drawing sheet is never
-cropped; a photo is pillarboxed on ink-900), then `container-site pt-12 md:pt-16`. Portrait:
-`container-site grid lg:grid-cols-12 lg:items-end gap-10 lg:gap-16 pt-6 md:pt-10`, the
-`aspect-[3/4] rounded-md` figure in `lg:col-span-6` and the title block beside it. Either way:
-`text-label` `{type} · {year}`, `mt-5 text-h1` title, `mt-6 max-w-2xl text-lead text-fg-2` summary;
-meta row `mt-10 grid grid-cols-3 gap-6 border-y border-line py-6` (`dt` label / `dd` value); body
-`max-w-2xl text-body text-fg-2 space-y-5`; gallery `mt-16 grid grid-cols-2 lg:grid-cols-12 gap-3
-lg:gap-6` alternating `col-span-7` / `col-span-5`, each image in a `<button
-class="reveal-self reveal-img" aria-label="Open photo n of N">`; next/previous `mt-24 border-t
-border-line grid md:grid-cols-2`, circular order, plus "All work".
+**Project detail** — one hero for every cover: `container-site grid lg:grid-cols-12 lg:items-end
+gap-10 lg:gap-16 pt-6 md:pt-10`; the sheet in a `rounded-md bg-ink-900` figure at its own aspect
+(`img.block.w-full.h-auto`, never cropped; `lg:col-span-7`, or `lg:col-span-6` for a portrait
+cover), the title block beside it bottom-aligned: `text-label` `{type} · {year}`, `mt-5 text-h1`
+title, `mt-6 max-w-2xl text-lead text-fg-2` summary. The meta strip (`ProjectMeta.astro`: `grid
+gap-6 border-y border-line py-6 sm:grid-cols-3`, `dt` label / `dd` value) closes the title column
+under a portrait cover (`lg:flex lg:flex-col lg:justify-end`, so the column earns its height) and
+sits `mt-10` under the hero for a landscape one; body `max-w-2xl text-body text-fg-2
+space-y-5`; gallery `mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12` alternating
+`col-span-7` / `col-span-5`, the last image of an odd count `sm:col-span-2 lg:col-span-8
+lg:col-start-3`, each image in a `<button class="reveal-self reveal-img" aria-label="Open photo n of
+N">`; placeholder alt text is prefixed "Drawing:"; next/previous `mt-24 border-t border-line grid
+md:grid-cols-2`, circular order, plus "All work".
 
 **Footer** — `relative overflow-hidden border-t border-line` with `.footer-glow` (amber radial at
 the bottom-left, 12%); `container-site py-16 lg:py-24`; `flex flex-col md:flex-row md:items-end
-md:justify-between gap-12 md:gap-16`: wordmark in `font-display text-h1 font-[350]` (`opsz` 144) +
-`mt-5 max-w-md text-sm text-fg-2` area line on the left, a `dl` of Call / Email / Hours
-(`sm:grid-cols-[auto_auto] md:text-right text-sm`) on the right; bottom row `mt-14 pt-6 border-t
-border-line text-xs text-fg-3 flex justify-between`: copyright · licensed · HIC number, and a
-"Back to top" `link-quiet` to `#top`.
+md:justify-between gap-10 md:gap-16`: wordmark in `font-display text-h1 font-[350]` (`opsz` 144) +
+`mt-5 max-w-md text-sm text-fg-2` area line on the left, phone and email links stacked
+(`text-sm md:items-end`) on the right, nothing the contact section just said; bottom row `mt-14
+pt-6 border-t border-line text-xs text-fg-3 flex-col sm:flex-row sm:justify-between`: copyright ·
+licensed (· HIC number once real), and a "Back to top" `link-quiet` to `#top`.
 
 **Call bar (mobile)** — `<nav aria-label="Call or text">`, `fixed inset-x-0 bottom-0 z-40 md:hidden
 grid grid-cols-2`, cells `h-14` + safe-area padding, "Call Jordan" (amber) / "Text Jordan" (ink-900,
 hairline top). Appears only after the hero CTA leaves the viewport; hides while the contact links are
 visible or an input is focused, so exactly one primary action is on screen at any scroll position.
 
-**404** — `container-site min-h-[70svh] flex flex-col justify-center py-section`: `text-label` "404",
-`text-h1` heading, `text-lead` line, quiet link home.
+**404** — a drawing sheet's title block: `container-site min-h-[70svh] flex flex-col justify-center
+py-section`, `.rule`, then `dl.grid.border-b.border-line sm:grid-cols-[1.4fr_1fr_1fr_auto]
+sm:divide-x` with cells `py-6 sm:px-6` (Drawing → `h1.text-h2` "Nothing here.", Project → "Page not
+found", Location → the requested path (filled by a two-line script), Sheet → 404), then the
+`text-lead` line and the quiet link home.
 
 ## Drawing sheets (`scripts/make-drawings.mjs`)
 
@@ -240,7 +257,9 @@ detail, drawn from the project's own copy (the deck really is 14 × 20 with a mi
 balusters really are under 4" apart). One generated SVG per image, deterministic, `npm run
 placeholders` regenerates all 25 from the `PROJECTS` table.
 
-Sheet anatomy, at 1600 × 1200 / 1200 × 1600 (about portrait 1200 × 1500): `ink-900` ground, a 40px
+Covers are generated at their grid slot's aspect (4:3 1600 × 1200, 3:4 1200 × 1600, 1:1 1400 × 1400,
+16:10 1600 × 1000, 3:2 1600 × 1067; the about portrait 4:5 1200 × 1500), galleries at 4:3 or 3:4.
+Sheet anatomy: `ink-900` ground, a 40px
 dot grid of linen at 7%, a lamp glow from one upper corner, 36–64 amber motes along its shaft (never
 over the title block), a linen frame at 16%, a paper-grain `feTurbulence` at 3.5%, and a title block
 (`PROJECT · LOCATION · DRAWING · SCALE · SHEET`; portrait sheets drop `SCALE`). Line classes:

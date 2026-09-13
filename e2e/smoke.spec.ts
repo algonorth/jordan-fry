@@ -70,9 +70,9 @@ test.describe('home', () => {
       await expect(section.getByText(String(i + 1).padStart(2, '0'), { exact: true }).first()).toBeAttached();
     }
     // Work cards carry a visible caption: index, title and type · town · year.
-    const firstCard = page.locator('#work a[href*="/work/"]').first();
+    const firstCard = page.locator('#work li a[href*="/work/"]').first();
     await expect(firstCard.locator('.card-meta')).toContainText(/01/);
-    await expect(firstCard.locator('.card-meta')).toContainText(/·\s*\d{4}$/);
+    await expect(firstCard.locator('.card-meta')).toContainText(/·\s*\d{4}\s*$/);
     await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/$/);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
     expect(ld['@graph'][0]['@type']).toBe('GeneralContractor');

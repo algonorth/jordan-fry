@@ -38,8 +38,9 @@ section or detail, drawn from the project's own copy) on an ink drawing sheet wi
 "Drawing sheets" in `DESIGN.md`. To replace one: drop JPEGs next to the project's `index.md` (long
 edge 1600 for covers and galleries, 2400 if a cover should fill a large screen), point `cover:` /
 `gallery:` at them, write a real `alt`, and set `placeholder: false`. Responsive `srcset` variants
-switch on automatically for raster images. Landscape covers show full-bleed and uncropped
-(`object-contain` on the ink ground); portrait covers sit beside the title.
+switch on automatically for raster images. A cover is shown whole at its own aspect beside the
+project title (never cropped), and in the work grid it fills a slot of the same aspect: keep a cover
+at the aspect of the slot its `order` lands in (4:3, 3:4, 1:1, 16:10, 3:2, 4:3) so nothing is cut.
 
 ## Contact form
 
@@ -65,7 +66,7 @@ Without a key the form is omitted and the contact section shows the call, text a
 Warm dust motes drift in a light shaft, coalesce into the headline, part around the pointer, and
 dissolve as the page scrolls. The `<h1>` is real text in the HTML; when the hero is going to run, a
 tiny inline probe keeps it invisible from first paint so the name appears exactly once, formed by the
-dust: the motes drift for a beat, fly in and form the glyphs over about 2.5s, then fade out as the
+dust: the motes drift for a beat, fly in and form the glyphs over about two seconds, then fade out as the
 typeset headline rises to full strength. Without WebGL, or if the hero fails to start, the headline
 simply shows. Quality tiers (60k / 24k / 8k motes) are
 picked from the device and stepped down if frames run long. The hero ignores the OS reduced-motion
