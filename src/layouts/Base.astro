@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+import { Font } from 'astro:assets';
+import Seo from '../components/Seo.astro';
+import JsonLd from '../components/JsonLd.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CallBar from '../components/CallBar.astro';
+import { skipLink } from '../data/copy';
+import { withBase } from '../lib/url';
+
+interface Props {
+  title: string;
+  description: string;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>[];
+}
+const { title, description, ogType, ogImage, noindex, jsonLd = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <Seo {title} {description} {ogType} {ogImage} {noindex} />
+    <Font cssVariable="--font-fraunces" preload />
+    <Font cssVariable="--font-inter" preload />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+    <meta name="generator" content={Astro.generator} />
+    <JsonLd extra={jsonLd} />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-ink-800 focus:px-4 focus:py-3 focus:text-fg focus:outline-2 focus:outline-amber-400"
+    >
+      {skipLink}
+    </a>
+    <slot name="backdrop" />
+    <Header />
+    <main id="main" tabindex="-1" class="relative z-10 outline-none">
+      <slot />
+    </main>
+    <Footer />
+    <CallBar />
+    <script>
+      import '../lib/reveal';
+    </script>
+  </body>
+</html>

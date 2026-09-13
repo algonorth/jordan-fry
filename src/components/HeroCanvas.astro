@@ -1,0 +1,65 @@
+---
+/**
+ * Fixed layers behind the page (rendered into the layout's backdrop slot on the home page only):
+ * a CSS light shaft that scrolls away with the hero and the particle canvas. Without WebGL or with
+ * reduced motion, what is here is already the designed static state.
+ */
+---
+
+<div class="hero-shaft pointer-events-none absolute inset-x-0 top-0 z-0 h-[92svh]" aria-hidden="true"></div>
+<canvas
+  id="hero-canvas"
+  class="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-0 transition-opacity duration-(--duration-slow) [&.is-live]:opacity-100 [&.is-static]:absolute [&.is-static]:h-[92svh]"
+  aria-hidden="true"
+></canvas>
+
+<style>
+  .hero-shaft {
+    background: radial-gradient(
+      60% 80% at 28% -10%,
+      color-mix(in oklab, var(--color-amber-400) 14%, transparent),
+      transparent 70%
+    );
+  }
+</style>
+
+<script>
+  // The headline is already painted; the particle module is fetched at idle time, after load.
+  const canvas = document.getElementById('hero-canvas') as HTMLCanvasElement | null;
+  const nameEl = document.getElementById('hero-name');
+  const heroEl = document.querySelector<HTMLElement>('[data-hero]');
+  const params = new URLSearchParams(location.search);
+  const allowSoftwareGL = params.get('gl') === 'software';
+  /** Cheap capability probe so devices without a usable GPU never download or parse the three.js chunk. */
+  const canRender = () => {
+    if (!('WebGL2RenderingContext' in window)) return false;
+    try {
+      const gl = document
+        .createElement('canvas')
+        .getContext('webgl2', { failIfMajorPerformanceCaveat: !allowSoftwareGL });
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      return Boolean(gl);
+    } catch {
+      return false;
+    }
+  };
+  if (canvas && nameEl && heroEl && canRender()) {
+    const start = () =>
+      import('../lib/hero')
+        .then((m) =>
+          m.mountHero(canvas, {
+            nameEl,
+            heroEl,
+            allowSoftwareGL,
+            debug: params.get('debug') === 'hero',
+          }),
+        )
+        .catch(() => {});
+    const schedule = () =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(start, { timeout: 1500 })
+        : setTimeout(start, 250);
+    if (document.readyState === 'complete') schedule();
+    else addEventListener('load', schedule, { once: true });
+  }
+</script>

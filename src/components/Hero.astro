@@ -1,0 +1,44 @@
+---
+import { hero } from '../data/copy';
+import { telHref } from '../data/site';
+---
+
+<section
+  id="hero"
+  data-hero
+  aria-labelledby="hero-name"
+  class="relative flex min-h-[92svh] flex-col justify-end pb-16 md:pb-24"
+>
+  <div class="container-site">
+    <h1
+      id="hero-name"
+      class="hero-name font-display text-display font-[350] text-fg"
+      style="font-variation-settings: 'opsz' 144"
+    >
+      <span class="block">Jordan</span>
+      <span class="block">Fry</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-lead text-pretty text-fg-2">{hero.line}</p>
+    <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4" data-primary-cta>
+      <a href={telHref} class="btn-primary focus-ring md:hidden">
+        {hero.ctaMobile}
+      </a>
+      <a href="#contact" class="btn-primary focus-ring hidden md:inline-flex">
+        {hero.ctaDesktop}
+      </a>
+      <a href="#work" class="link-quiet focus-ring rounded-sm">
+        {hero.secondary}
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The particles form the same glyphs on top; once they do, the crisp name recedes to a substrate. */
+  .hero-name {
+    transition: opacity 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  [data-hero].is-lit .hero-name {
+    opacity: 0.32;
+  }
+</style>

@@ -1,0 +1,32 @@
+---
+/**
+ * The one image primitive. Raster sources get responsive variants; SVG placeholders pass
+ * through untouched, so swapping a JPEG in later turns responsive images on with no edits here.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  class?: string;
+  sizes?: string;
+  width?: number;
+  priority?: boolean;
+}
+const { src, alt, class: className, sizes, width = 1600, priority = false } = Astro.props;
+const raster = src.format !== 'svg';
+---
+
+{raster ? (
+  <Image
+    src={src}
+    alt={alt}
+    class={className}
+    width={Math.min(width, src.width)}
+    sizes={sizes}
+    priority={priority}
+  />
+) : (
+  <Image src={src} alt={alt} class={className} layout="none" priority={priority} />
+)}

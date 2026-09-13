@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { meta, notFound } from '../data/copy';
+import { withBase } from '../lib/url';
+---
+
+<Base title={meta.notFound.title} description={meta.notFound.description} noindex>
+  <section class="container-site flex min-h-[70svh] flex-col justify-center py-section">
+    <p class="text-label uppercase text-fg-3">404</p>
+    <h1 class="mt-4 font-display text-h1 text-fg">{notFound.heading}</h1>
+    <p class="mt-6 max-w-md text-lead text-fg-2">{notFound.text}</p>
+    <a href={withBase('/')} class="link-quiet focus-ring mt-10 self-start rounded-sm">
+      {notFound.link}
+    </a>
+  </section>
+</Base>

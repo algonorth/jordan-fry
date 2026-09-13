@@ -1,0 +1,76 @@
+---
+import { site } from '../data/site';
+import { services } from '../data/services';
+import { meta } from '../data/copy';
+import { withBase } from '../lib/url';
+
+interface Props {
+  extra?: Record<string, unknown>[];
+}
+const { extra = [] } = Astro.props;
+const root = new URL(withBase('/'), Astro.site).href;
+const sameAs = Object.values(site.social).filter(Boolean);
+
+const business: Record<string, unknown> = {
+  '@type': 'GeneralContractor',
+  '@id': `${root}#business`,
+  name: site.business,
+  alternateName: site.name,
+  description: meta.home.description,
+  url: root,
+  telephone: site.phone.e164,
+  email: site.email,
+  image: `${root}og.png`,
+  priceRange: '$$',
+  identifier: {
+    '@type': 'PropertyValue',
+    propertyID: 'PA Home Improvement Contractor Registration',
+    value: site.hic,
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: site.address.locality,
+    addressRegion: site.address.region,
+    postalCode: site.address.postalCode,
+    addressCountry: site.address.country,
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: site.geo.lat, longitude: site.geo.lng },
+  areaServed: [
+    { '@type': 'AdministrativeArea', name: `${site.area.short}, PA` },
+    ...site.area.towns.map((name) => ({ '@type': 'City', name })),
+  ],
+  openingHoursSpecification: site.hours.map((h) => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: h.days,
+    opens: h.opens,
+    closes: h.closes,
+  })),
+  knowsAbout: [
+    'Carpentry',
+    'Finish carpentry',
+    'Custom built-ins',
+    'Deck building',
+    'Stair construction',
+    'Home remodeling',
+  ],
+  founder: {
+    '@type': 'Person',
+    name: site.name,
+    jobTitle: 'Carpenter',
+    alumniOf: { '@type': 'EducationalOrganization', name: site.school },
+  },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Carpentry services',
+    itemListElement: services.map((s) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: s.name },
+    })),
+  },
+};
+if (sameAs.length) business.sameAs = sameAs;
+
+const graph = { '@context': 'https://schema.org', '@graph': [business, ...extra] };
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(graph)}></script>

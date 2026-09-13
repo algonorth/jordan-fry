@@ -1,0 +1,42 @@
+---
+import { site, telHref } from '../data/site';
+import { nav } from '../data/copy';
+import { withBase } from '../lib/url';
+
+const links = [
+  { href: withBase('/work/'), label: nav.work },
+  { href: withBase('/#services'), label: nav.services },
+  { href: withBase('/#about'), label: nav.about },
+];
+---
+
+<header
+  id="site-header"
+  class="sticky top-0 z-30 border-b border-transparent transition-colors duration-(--duration-base) [&.is-scrolled]:border-line [&.is-scrolled]:bg-ink-950/80 [&.is-scrolled]:backdrop-blur-md"
+>
+  <div class="container-site flex h-16 items-center justify-between">
+    <a href={withBase('/')} class="focus-ring rounded-sm font-display text-xl tracking-tight text-fg">
+      {site.name}
+    </a>
+    <nav aria-label="Primary" class="flex items-center gap-6 md:gap-8">
+      {links.map((l) => (
+        <a
+          href={l.href}
+          class="focus-ring rounded-sm py-3 text-sm text-fg-2 transition-colors duration-(--duration-fast) hover:text-fg"
+        >
+          {l.label}
+        </a>
+      ))}
+      <a
+        href={telHref}
+        class="focus-ring hidden h-10 items-center rounded-md border border-line-strong px-4 text-sm font-medium text-fg tabular-nums transition-colors duration-(--duration-fast) hover:border-amber-400 md:inline-flex"
+      >
+        {site.phone.display}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  import '../lib/header';
+</script>

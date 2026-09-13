@@ -1,0 +1,116 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import WorkImage from '../../components/WorkImage.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import { meta, work, nav } from '../../data/copy';
+import { withBase } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const entries = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+  return entries.map((entry, i) => ({
+    params: { id: entry.id },
+    props: {
+      entry,
+      prev: entries[(i - 1 + entries.length) % entries.length]!,
+      next: entries[(i + 1) % entries.length]!,
+    },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const { title, summary, location, year, scope, cover, coverAlt, gallery } = entry.data;
+const { Content } = await render(entry);
+const town = location.split(',')[0];
+const pageTitle = `${title}, ${town} | ${meta.siteName}`;
+const description = meta.project(summary, location, year);
+const root = new URL(withBase('/'), Astro.site).href;
+const breadcrumbs = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: root },
+    { '@type': 'ListItem', position: 2, name: 'Work', item: `${root}work/` },
+    { '@type': 'ListItem', position: 3, name: title, item: `${root}work/${entry.id}/` },
+  ],
+};
+const meta3 = [
+  { label: work.location, value: location, cls: '' },
+  { label: work.scope, value: scope.join(' · '), cls: '' },
+  { label: work.year, value: String(year), cls: 'tabular-nums' },
+];
+---
+
+<Base title={pageTitle} description={description} ogType="article" jsonLd={[breadcrumbs]}>
+  <article>
+    <figure
+      class="aspect-[3/2] max-h-[80svh] w-full overflow-hidden bg-ink-800"
+      style={`view-transition-name: cover-${entry.id}`}
+    >
+      <WorkImage
+        src={cover}
+        alt={coverAlt}
+        class="size-full object-cover"
+        sizes="100vw"
+        width={2400}
+        priority
+      />
+    </figure>
+    <div class="container-site pt-12 md:pt-16">
+      <h1 class="font-display text-h1 text-fg">{title}</h1>
+      <p class="mt-6 max-w-2xl text-lead text-fg-2">{summary}</p>
+      <dl class="mt-10 grid grid-cols-3 gap-6 border-y border-line py-6">
+        {meta3.map((m) => (
+          <div>
+            <dt class="text-label uppercase text-fg-3">{m.label}</dt>
+            <dd class:list={['mt-1 text-sm text-fg', m.cls]}>{m.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div class="mt-10 max-w-2xl space-y-5 text-body text-fg-2">
+        <Content />
+      </div>
+      {gallery.length > 0 && (
+        <ul class="mt-16 grid grid-cols-2 gap-3 lg:grid-cols-12 lg:gap-6">
+          {gallery.map((g, i) => (
+            <li class={i % 2 === 0 ? 'lg:col-span-7' : 'lg:col-span-5'} data-reveal>
+              <button
+                type="button"
+                class="group focus-ring block w-full overflow-hidden rounded-md bg-ink-800"
+                data-lightbox-open={i}
+                aria-label={work.openPhoto(i + 1, gallery.length)}
+              >
+                <WorkImage
+                  src={g.src}
+                  alt={g.alt}
+                  sizes="(min-width: 64rem) 50vw, 50vw"
+                  class="block w-full transition-[transform,filter] duration-(--duration-slow) ease-out-soft group-hover:scale-[1.03] group-hover:brightness-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <nav aria-label="More work" class="mt-24 grid border-t border-line md:grid-cols-2">
+        <a href={withBase(`/work/${prev.id}/`)} class="group focus-ring rounded-sm py-10 md:pr-8">
+          <span class="block text-label uppercase text-fg-3">{work.previous}</span>
+          <span class="mt-2 block font-display text-h3 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
+            {prev.data.title}
+          </span>
+        </a>
+        <a
+          href={withBase(`/work/${next.id}/`)}
+          class="group focus-ring rounded-sm border-t border-line py-10 md:border-t-0 md:border-l md:pl-8 md:text-right"
+        >
+          <span class="block text-label uppercase text-fg-3">{work.next}</span>
+          <span class="mt-2 block font-display text-h3 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
+            {next.data.title}
+          </span>
+        </a>
+      </nav>
+      <a href={withBase('/work/')} class="link-quiet focus-ring mt-8 inline-block rounded-sm">
+        {nav.allWork}
+      </a>
+    </div>
+  </article>
+  {gallery.length > 0 && <Lightbox photos={gallery} />}
+</Base>

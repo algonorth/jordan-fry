@@ -1,0 +1,113 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { work } from '../data/copy';
+
+interface Props {
+  photos: { src: ImageMetadata; alt: string }[];
+}
+const { photos } = Astro.props;
+const btn =
+  'focus-ring pointer-events-auto absolute inline-flex size-11 items-center justify-center rounded-full bg-ink-800/80 text-fg transition-colors duration-(--duration-fast) hover:bg-ink-700';
+---
+
+<dialog
+  id="lightbox"
+  closedby="any"
+  aria-label="Photo viewer"
+  class="m-auto h-svh max-h-none w-screen max-w-none border-0 bg-transparent p-0 backdrop:bg-ink-950/92 backdrop:backdrop-blur-sm"
+>
+  <button
+    type="button"
+    class:list={[btn, 'top-4 right-4']}
+    data-lightbox-close
+    aria-label={work.close}
+    autofocus
+  >
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      aria-hidden="true"
+    >
+      <path d="M6 6l12 12M18 6L6 18"></path>
+    </svg>
+  </button>
+  <ul class="pointer-events-none flex h-full w-full items-center justify-center p-4 md:p-14">
+    {photos.map((p, i) => (
+      <li class="contents" data-slide={i} hidden>
+        <Image
+          src={p.src}
+          alt={p.alt}
+          class="pointer-events-auto max-h-[85svh] max-w-[min(94vw,1400px)] rounded-lg object-contain"
+          layout="none"
+          loading="lazy"
+        />
+      </li>
+    ))}
+  </ul>
+  <p
+    class="sr-only"
+    aria-live="polite"
+    id="lightbox-status"
+    data-template={work.photoOf(0, photos.length)}
+  ></p>
+  {photos.length > 1 && (
+    <>
+      <button
+        type="button"
+        class:list={[btn, 'top-1/2 left-4 -translate-y-1/2']}
+        data-lightbox-prev
+        aria-label="Previous photo"
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class:list={[btn, 'top-1/2 right-4 -translate-y-1/2']}
+        data-lightbox-next
+        aria-label="Next photo"
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </>
+  )}
+</dialog>
+
+<script>
+  import '../lib/lightbox';
+</script>
+
+<style>
+  dialog[open] {
+    animation: lightbox-in var(--duration-base) var(--ease-out-soft);
+  }
+  @keyframes lightbox-in {
+    from {
+      opacity: 0;
+    }
+  }
+</style>

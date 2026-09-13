@@ -1,0 +1,54 @@
+---
+import { PUBLIC_WEB3FORMS_KEY } from 'astro:env/client';
+import ContactForm from './ContactForm.astro';
+import { contact, process } from '../data/copy';
+import { site, telHref, smsHref, mailHref } from '../data/site';
+
+const hasForm = Boolean(PUBLIC_WEB3FORMS_KEY);
+const rows = [
+  { label: contact.links.call, href: telHref, text: site.phone.display, cls: '' },
+  { label: contact.links.text, href: smsHref, text: site.phone.display, cls: 'md:hidden' },
+  { label: contact.links.email, href: mailHref, text: site.email, cls: '' },
+];
+---
+
+<section id="contact" aria-labelledby="contact-h" class="scroll-mt-20 py-section">
+  <div class="container-site">
+    <div class:list={[hasForm ? 'grid gap-12 lg:grid-cols-12 lg:gap-16' : 'max-w-2xl']}>
+      <div class:list={[hasForm && 'lg:col-span-5']} data-reveal>
+        <h2 id="contact-h" class="font-display text-h2 text-fg">
+          {contact.heading}
+        </h2>
+        <p class="mt-6 text-lead text-fg-2">{contact.lead}</p>
+        <dl class="mt-10 text-body" data-primary-cta>
+          {rows.map((r) => (
+            <div class:list={['flex items-baseline gap-6 py-2', r.cls]}>
+              <dt class="w-14 shrink-0 text-label uppercase text-fg-3">{r.label}</dt>
+              <dd>
+                <a
+                  href={r.href}
+                  class="focus-ring rounded-sm text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300"
+                >
+                  {r.text}
+                </a>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <ol class="mt-12 grid gap-6 border-t border-line pt-8">
+          {process.map((step) => (
+            <li>
+              <span class="block text-label uppercase text-oak-300">{step.title}</span>
+              <p class="mt-1 max-w-md text-sm text-fg-2">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+      {hasForm && (
+        <div class="lg:col-span-6 lg:col-start-7" data-reveal>
+          <ContactForm />
+        </div>
+      )}
+    </div>
+  </div>
+</section>

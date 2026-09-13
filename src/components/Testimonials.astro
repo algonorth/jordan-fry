@@ -1,0 +1,27 @@
+---
+import { testimonials } from '../data/testimonials';
+import { testimonials as copy } from '../data/copy';
+---
+
+<section id="testimonials" aria-labelledby="testimonials-h" class="py-section">
+  <div class="container-site">
+    <h2 id="testimonials-h" class="font-sans text-label uppercase text-fg-3">
+      {copy.heading}
+    </h2>
+    <ul class="mt-12 grid gap-x-12 gap-y-16 lg:grid-cols-3" data-reveal>
+      {testimonials.map((t) => (
+        <li>
+          <figure>
+            <blockquote class="quote font-display text-quote font-[350] text-pretty text-fg">
+              <p>{t.quote}</p>
+            </blockquote>
+            <figcaption class="mt-6 text-sm">
+              <span class="font-medium text-fg">{t.name}</span>
+              <span class="text-fg-3">{` · ${t.town}`}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import WorkGrid from '../../components/WorkGrid.astro';
+import { meta, work } from '../../data/copy';
+
+const entries = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={meta.work.title} description={meta.work.description}>
+  <section aria-labelledby="work-h" class="pt-12 pb-section md:pt-20">
+    <div class="container-wide">
+      <div class="mb-12 max-w-2xl lg:mb-16">
+        <h1 id="work-h" class="font-display text-h1 text-fg">
+          {work.indexHeading}
+        </h1>
+        <p class="mt-6 text-lead text-fg-2">{work.indexLead}</p>
+      </div>
+      <WorkGrid entries={entries} />
+    </div>
+  </section>
+</Base>
