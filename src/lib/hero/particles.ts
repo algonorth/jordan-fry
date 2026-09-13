@@ -145,8 +145,13 @@ export function createParticles(
     uWhite: { value: new Color(palette.white) },
   };
 
+  // Constant indices only: Adreno's compiler refuses dynamically indexed uniform arrays.
+  const trail = Array.from(
+    { length: cfg.trailCount },
+    (_, i) => `disp += puff(p, uTrail[${i}], vec2(1.0, 0.0), 1.0);`,
+  ).join('\n  ');
   const material = new ShaderMaterial({
-    vertexShader: `${snoise}\n${vert}`,
+    vertexShader: `${snoise}\n${vert.replace('TRAIL_UNROLLED', trail)}`,
     fragmentShader: frag,
     uniforms,
     defines: { TRAIL_N: cfg.trailCount },

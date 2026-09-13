@@ -89,6 +89,21 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   scene.add(system.points);
   const camera = new OrthographicCamera(0, 1, 0, 1, -1, 1);
 
+  // Compile now and check the link result. Some mobile GPU compilers reject a shader that every
+  // desktop accepts; the hero must then bow out so the headline shows, instead of drawing nothing.
+  renderer.compile(scene, camera);
+  type Diagnosed = { diagnostics?: { runnable: boolean; programLog: string } };
+  const broken = (renderer.info.programs as Diagnosed[] | null)?.find(
+    (p) => p.diagnostics && !p.diagnostics.runnable,
+  );
+  if (broken) {
+    if (opts.debug) console.warn('hero: shader failed to link, falling back', broken.diagnostics?.programLog);
+    system.dispose();
+    renderer.dispose();
+    renderer.forceContextLoss();
+    return { mode: 'fallback', tier, setPaused() {}, dispose() {} };
+  }
+
   const mode: 'live' | 'static' = reduced ? 'static' : 'live';
   if (mode === 'static') canvas.classList.add('is-static');
 

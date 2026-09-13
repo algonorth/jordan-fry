@@ -1,5 +1,10 @@
 // Stateless sawdust: every frame, position = f(attributes, uniforms). No feedback buffers.
 // `TRAIL_N` is injected through ShaderMaterial defines. three prepends precision + matrices.
+//
+// Written for the strictest mobile compilers (Qualcomm Adreno asserts and refuses to link on
+// dynamically indexed uniform arrays, and is fragile around early returns and vector ternaries):
+// the trail loop is unrolled by particles.ts into constant indices (the placeholder token below,
+// which must appear exactly once), helpers are branchless, and selections use if-assignment or mix().
 #define PI 3.141592653589793
 
 attribute vec3 aTarget;     // u, v inside the name box (0..1), z: brightness jitter
@@ -32,12 +37,12 @@ varying float vWarmth;
 
 // Displacement from one disturbance (x, y, strength, radius), stretched along `vdir` by `elong`.
 vec2 puff(vec2 p, vec4 t, vec2 vdir, float elong) {
-  if (t.z <= 0.001) return vec2(0.0);
   vec2 d = p - t.xy;
   vec2 q = vec2(dot(d, vdir) / elong, dot(d, vec2(-vdir.y, vdir.x)));
-  float f = 1.0 - smoothstep(0.0, t.w, length(q));
+  float f = 1.0 - smoothstep(0.0, max(t.w, 1e-3), length(q));
   f *= f;
-  return normalize(d + vec2(1e-3, 0.0)) * (f * t.z * t.w * 0.6);
+  float gate = step(0.001, t.z); // inactive puffs contribute nothing, without a branch
+  return normalize(d + vec2(1e-3, 0.0)) * (f * t.z * t.w * 0.6 * gate);
 }
 
 void main() {
@@ -83,10 +88,11 @@ void main() {
 
   // 5. Pointer: a damped field with a wake, plus decaying trail puffs.
   float speed = length(uPointerVel);
-  vec2 vdir = speed > 1.0 ? uPointerVel / speed : vec2(1.0, 0.0);
+  vec2 vdir = vec2(1.0, 0.0);
+  if (speed > 1.0) vdir = uPointerVel / speed;
   float elong = 1.0 + 1.5 * clamp(speed / 1200.0, 0.0, 1.0);
   vec2 disp = puff(p, uPointer, vdir, elong);
-  for (int i = 0; i < TRAIL_N; i++) disp += puff(p, uTrail[i], vec2(1.0, 0.0), 1.0);
+  TRAIL_UNROLLED
   p += disp * mix(0.7, 1.3, aSeed.w) * mix(1.0, 0.6, hold);
 
   // 6. Fake depth of field: away from the focal plane motes get bigger and dimmer; letters snap into focus.
@@ -106,7 +112,7 @@ void main() {
   vWarmth = aWarmth;
 
   // Invisible motes are clipped away rather than rasterised.
-  gl_Position = vAlpha > 0.002
-    ? projectionMatrix * modelViewMatrix * vec4(p, 0.0, 1.0)
-    : vec4(2.0, 2.0, 2.0, 1.0);
+  vec4 clip = projectionMatrix * modelViewMatrix * vec4(p, 0.0, 1.0);
+  if (vAlpha <= 0.002) clip = vec4(2.0, 2.0, 2.0, 1.0);
+  gl_Position = clip;
 }
