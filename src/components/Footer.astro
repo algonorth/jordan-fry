@@ -1,17 +1,17 @@
 ---
-import { site, hoursDisplay, hasHic, telHref, mailHref } from '../data/site';
-import { footer, contact } from '../data/copy';
+import { site, hasHic, telHref, mailHref } from '../data/site';
+import { footer } from '../data/copy';
 import { withBase } from '../lib/url';
 
 const year = new Date().getFullYear();
 const linkCls =
-  'focus-ring rounded-sm text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300';
+  'focus-ring rounded-sm py-1 text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300';
 ---
 
 <footer class="relative overflow-hidden border-t border-line">
   <div class="footer-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
   <div class="container-site relative py-16 lg:py-24">
-    <div class="flex flex-col gap-12 md:flex-row md:items-end md:justify-between md:gap-16">
+    <div class="flex flex-col gap-10 md:flex-row md:items-end md:justify-between md:gap-16">
       <div>
         <a
           href={withBase('/')}
@@ -22,24 +22,16 @@ const linkCls =
         </a>
         <p class="mt-5 max-w-md text-sm text-fg-2">{footer.line}</p>
       </div>
-      <dl class="grid shrink-0 gap-x-12 gap-y-3 text-sm sm:grid-cols-[auto_auto] md:text-right">
-        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.call}</dt>
-        <dd>
-          <a href={telHref} class={linkCls}>
-            {site.phone.display}
-          </a>
-        </dd>
-        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.email}</dt>
-        <dd>
-          <a href={mailHref} class={linkCls}>
-            {site.email}
-          </a>
-        </dd>
-        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.hours}</dt>
-        <dd class="text-fg-2 tabular-nums">{hoursDisplay}</dd>
-      </dl>
+      <div class="flex shrink-0 flex-col gap-1 text-sm md:items-end">
+        <a href={telHref} class={linkCls}>
+          {site.phone.display}
+        </a>
+        <a href={mailHref} class={linkCls}>
+          {site.email}
+        </a>
+      </div>
     </div>
-    <div class="mt-14 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6 text-xs text-fg-3">
+    <div class="mt-14 flex flex-col gap-3 border-t border-line pt-6 text-xs text-fg-3 sm:flex-row sm:items-baseline sm:justify-between">
       <p class="flex flex-wrap gap-x-6 gap-y-1">
         <span>
           © {year} {site.name}
@@ -47,7 +39,7 @@ const linkCls =
         <span>{footer.legal}</span>
         {hasHic && <span>{footer.hic(site.hic)}</span>}
       </p>
-      <a href="#top" class="link-quiet focus-ring rounded-sm text-xs">
+      <a href="#top" class="link-quiet focus-ring self-start rounded-sm text-xs">
         {footer.backToTop}
       </a>
     </div>

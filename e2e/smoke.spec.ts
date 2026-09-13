@@ -114,11 +114,18 @@ test.describe('work', () => {
     await expect(opener).toBeFocused();
   });
 
-  test('a landscape cover is never cropped and a portrait cover sits beside the title', async ({ page }) => {
-    await page.goto('/work/cedar-deck-ligonier/');
-    await expect(page.locator('article figure img').first()).toHaveCSS('object-fit', 'contain');
-    await page.goto('/work/fireplace-built-ins-greensburg/');
-    await expect(page.locator('article figure').first()).toHaveClass(/aspect-\[3\/4\]/);
+  test('covers are shown whole, at their own aspect, beside the title', async ({ page }) => {
+    for (const id of ['cedar-deck-ligonier', 'fireplace-built-ins-greensburg']) {
+      await page.goto(`/work/${id}/`);
+      const img = page.locator('article figure img').first();
+      await expect(img).toBeVisible();
+      const r = await img.evaluate((el: HTMLImageElement) => ({
+        natural: el.naturalWidth / el.naturalHeight,
+        shown: el.clientWidth / el.clientHeight,
+      }));
+      expect(Math.abs(r.natural - r.shown)).toBeLessThan(0.02);
+      await expect(page.locator('article h1')).toBeVisible();
+    }
   });
 
   test('unknown routes get the 404 page', async ({ page }) => {

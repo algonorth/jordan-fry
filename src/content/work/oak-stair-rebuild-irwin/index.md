@@ -7,7 +7,7 @@ type: 'Stairs'
 scope: ['Stairs', 'Railings', 'Finish']
 cover: ./cover.svg # TODO: photo 1200x1600
 coverAlt: 'Staircase with red oak treads, white risers and a new oak handrail and newel post, Irwin'
-orientation: portrait
+orientation: landscape
 gallery:
   - { src: ./01.svg, alt: 'Close view of solid red oak treads with a satin finish' }
   - { src: ./02.svg, alt: 'Newel post and handrail joint at the bottom of the stair' }

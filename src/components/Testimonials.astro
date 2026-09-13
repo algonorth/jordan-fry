@@ -11,14 +11,14 @@ import { sections } from '../data/copy';
       label={sections.testimonials.label}
       id="testimonials-h"
     />
-    <ul class="mt-12 grid gap-x-12 gap-y-16 lg:mt-16 lg:grid-cols-3" data-reveal>
-      {testimonials.map((t) => (
+    <ul class="mt-12 grid gap-x-12 gap-y-14 lg:mt-16 lg:grid-cols-3" data-reveal>
+      {testimonials.map((t, i) => (
         <li>
-          <figure>
-            <span class="mark block font-display text-amber-400" aria-hidden="true">
-              “
+          <figure class="border-t border-line pt-6">
+            <span class="block text-label text-oak-300 tabular-nums" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
             </span>
-            <blockquote class="quote mt-2 font-display text-quote font-[350] text-pretty text-fg">
+            <blockquote class="quote mt-6 font-display text-quote font-[350] text-pretty text-fg">
               <p>{t.quote}</p>
             </blockquote>
             <figcaption class="mt-6 text-sm">
@@ -31,12 +31,3 @@ import { sections } from '../data/copy';
     </ul>
   </div>
 </section>
-
-<style>
-  .mark {
-    font-size: 3.5rem;
-    line-height: 0.7;
-    font-variation-settings: 'opsz' 144;
-    opacity: 0.85;
-  }
-</style>

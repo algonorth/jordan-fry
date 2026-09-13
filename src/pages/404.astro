@@ -2,15 +2,44 @@
 import Base from '../layouts/Base.astro';
 import { meta, notFound } from '../data/copy';
 import { withBase } from '../lib/url';
+
+const cell = 'py-6 sm:px-6 first:pl-0 last:pr-0';
+const label = 'block text-label uppercase text-fg-3';
 ---
 
 <Base title={meta.notFound.title} description={meta.notFound.description} noindex>
   <section class="container-site flex min-h-[70svh] flex-col justify-center py-section">
-    <p class="text-label uppercase text-fg-3">404</p>
-    <h1 class="mt-4 font-display text-h1 text-fg">{notFound.heading}</h1>
-    <p class="mt-6 max-w-md text-lead text-fg-2">{notFound.text}</p>
+    <div class="rule" aria-hidden="true"></div>
+    <dl class="grid border-b border-line sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:divide-x sm:divide-line">
+      <div class={cell}>
+        <dt class={label}>{notFound.block.drawing}</dt>
+        <dd>
+          <h1 class="mt-2 font-display text-h2 text-fg">{notFound.heading}</h1>
+        </dd>
+      </div>
+      <div class={cell}>
+        <dt class={label}>{notFound.block.project}</dt>
+        <dd class="mt-2 text-sm text-fg">{notFound.block.projectValue}</dd>
+      </div>
+      <div class={cell}>
+        <dt class={label}>{notFound.block.location}</dt>
+        <dd id="nf-path" class="mt-2 truncate text-sm text-fg-2">
+          /
+        </dd>
+      </div>
+      <div class={cell}>
+        <dt class={label}>{notFound.block.sheet}</dt>
+        <dd class="mt-2 text-sm text-fg tabular-nums">404</dd>
+      </div>
+    </dl>
+    <p class="mt-8 max-w-md text-lead text-fg-2">{notFound.text}</p>
     <a href={withBase('/')} class="link-quiet focus-ring mt-10 self-start rounded-sm">
       {notFound.link}
     </a>
   </section>
+  <script>
+    // The sheet's LOCATION cell names the path that was asked for.
+    const el = document.getElementById('nf-path');
+    if (el) el.textContent = location.pathname;
+  </script>
 </Base>

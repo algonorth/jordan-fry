@@ -66,7 +66,7 @@
   --text-label--letter-spacing: 0.14em;
 
   /* Rhythm and containers */
-  --spacing-section: clamp(5rem, 3rem + 8vw, 10rem);
+  --spacing-section: clamp(4rem, 2rem + 6vw, 7.5rem);
   --container-text: 44rem;
   --container-site: 72rem;
   --container-wide: 85rem;

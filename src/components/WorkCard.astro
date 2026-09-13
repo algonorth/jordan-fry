@@ -31,13 +31,13 @@ const town = location.split(',')[0];
       </span>
     )}
   </figure>
-  <div class="card-meta mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-    <span class="flex min-w-0 items-baseline gap-4">
-      <span class="text-label text-oak-300 tabular-nums">{String(index + 1).padStart(2, '0')}</span>
-      <span class="font-display text-h3 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
+  <div class="card-meta mt-4 grid grid-cols-[2rem_1fr] gap-x-4">
+    <span class="pt-1.5 text-label text-oak-300 tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+    <span>
+      <span class="block font-display text-h3 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
         {title}
       </span>
+      <span class="mt-1 block text-label uppercase text-fg-3 tabular-nums">{`${type} · ${town} · ${year}`}</span>
     </span>
-    <span class="text-label uppercase text-fg-3 tabular-nums">{`${type} · ${town} · ${year}`}</span>
   </div>
 </a>

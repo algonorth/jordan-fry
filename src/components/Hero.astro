@@ -2,7 +2,11 @@
 import { hero } from '../data/copy';
 import { site, telHref } from '../data/site';
 
-const glance = [site.address.locality + ', ' + site.address.region, hero.since(site.founded), hero.licensed];
+const glance = [
+  { label: hero.glance.basedIn, value: `${site.address.locality}, ${site.address.region}` },
+  { label: hero.glance.since, value: String(site.founded) },
+  { label: hero.glance.credentials, value: hero.licensed },
+];
 ---
 
 <section
@@ -12,7 +16,7 @@ const glance = [site.address.locality + ', ' + site.address.region, hero.since(s
   class="relative flex min-h-[88svh] flex-col justify-end pb-16 md:pb-24"
 >
   <div class="container-site lg:grid lg:grid-cols-12 lg:items-end lg:gap-10">
-    <div class="lg:col-span-9">
+    <div class="lg:col-span-8">
       <h1
         id="hero-name"
         class="hero-name font-display text-display font-[350] text-fg"
@@ -34,14 +38,17 @@ const glance = [site.address.locality + ', ' + site.address.region, hero.since(s
         </a>
       </div>
     </div>
-    <ul
-      aria-label={hero.glanceLabel}
-      class="hidden text-right text-label uppercase text-fg-3 lg:col-span-3 lg:block lg:space-y-3 lg:justify-self-end"
+    <dl
+      aria-label={hero.glance.label}
+      class="hidden border-y border-line text-sm lg:col-span-4 lg:grid lg:grid-cols-3 lg:divide-x lg:divide-line lg:justify-self-end"
     >
       {glance.map((g) => (
-        <li class="tabular-nums">{g}</li>
+        <div class="px-5 py-4 first:pl-0 last:pr-0">
+          <dt class="text-label uppercase text-fg-3">{g.label}</dt>
+          <dd class="mt-1 whitespace-nowrap text-fg tabular-nums">{g.value}</dd>
+        </div>
       ))}
-    </ul>
+    </dl>
   </div>
 </section>
 

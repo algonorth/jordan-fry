@@ -8,7 +8,9 @@ interface Props {
 }
 const { photos } = Astro.props;
 const btn =
-  'focus-ring pointer-events-auto absolute inline-flex size-11 items-center justify-center rounded-full bg-ink-800/80 text-fg transition-colors duration-(--duration-fast) hover:bg-ink-700';
+  'focus-ring inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-ink-800/80 text-fg transition-colors duration-(--duration-fast) hover:bg-ink-700';
+const arrow = (d: string) =>
+  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="${d}"/></svg>`;
 ---
 
 <dialog
@@ -19,86 +21,71 @@ const btn =
 >
   <button
     type="button"
-    class:list={[btn, 'top-4 right-4']}
+    class:list={[btn, 'absolute top-4 right-4']}
     data-lightbox-close
     aria-label={work.close}
     autofocus
   >
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      aria-hidden="true"
-    >
-      <path d="M6 6l12 12M18 6L6 18"></path>
-    </svg>
+    <Fragment set:html={arrow('M6 6l12 12M18 6L6 18')} />
   </button>
-  <ul class="pointer-events-none flex h-full w-full items-center justify-center p-4 pb-20 md:p-14 md:pb-24">
-    {photos.map((p, i) => (
-      <li class="contents" data-slide={i} hidden>
-        <Image
-          src={p.src}
-          alt={p.alt}
-          class="pointer-events-auto max-h-[85svh] max-w-[min(94vw,1400px)] rounded-lg object-contain"
-          layout="none"
-          loading="lazy"
-        />
-      </li>
-    ))}
-  </ul>
+  <div
+    class="flex h-full w-full flex-col items-center justify-center gap-5 px-4 py-16 md:px-20"
+    data-lightbox-stage
+  >
+    <ul class="contents">
+      {photos.map((p, i) => (
+        <li class="contents" data-slide={i} hidden>
+          <Image
+            src={p.src}
+            alt={p.alt}
+            class="max-h-[72svh] max-w-full rounded-lg object-contain select-none md:max-h-[78svh] md:max-w-[min(90vw,1400px)]"
+            layout="none"
+            loading="lazy"
+            draggable="false"
+          />
+        </li>
+      ))}
+    </ul>
+    <div class="flex w-full max-w-xl items-center justify-center gap-4 text-center">
+      {photos.length > 1 && (
+        <button type="button" class:list={[btn, 'md:hidden']} data-lightbox-prev aria-label="Previous photo">
+          <Fragment set:html={arrow('M15 5l-7 7 7 7')} />
+        </button>
+      )}
+      <div class="min-w-0 flex-1" aria-hidden="true">
+        <span id="lightbox-count" class="block text-label uppercase text-oak-300 tabular-nums"></span>
+        <span id="lightbox-caption" class="mt-1 block text-sm text-fg-2"></span>
+      </div>
+      {photos.length > 1 && (
+        <button type="button" class:list={[btn, 'md:hidden']} data-lightbox-next aria-label="Next photo">
+          <Fragment set:html={arrow('M9 5l7 7-7 7')} />
+        </button>
+      )}
+    </div>
+  </div>
   <p
     class="sr-only"
     aria-live="polite"
     id="lightbox-status"
     data-template={work.photoOf(0, photos.length)}
   ></p>
-  <div
-    class="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-16 pb-5 text-center"
-    aria-hidden="true"
-  >
-    <span id="lightbox-count" class="text-label uppercase text-oak-300 tabular-nums"></span>
-    <span id="lightbox-caption" class="max-w-xl text-sm text-fg-2"></span>
-  </div>
   {photos.length > 1 && (
     <>
       <button
         type="button"
-        class:list={[btn, 'top-1/2 left-4 -translate-y-1/2']}
+        class:list={[btn, 'absolute top-1/2 left-4 hidden -translate-y-1/2 md:inline-flex']}
         data-lightbox-prev
         aria-label="Previous photo"
       >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          aria-hidden="true"
-        >
-          <path d="M15 5l-7 7 7 7" />
-        </svg>
+        <Fragment set:html={arrow('M15 5l-7 7 7 7')} />
       </button>
       <button
         type="button"
-        class:list={[btn, 'top-1/2 right-4 -translate-y-1/2']}
+        class:list={[btn, 'absolute top-1/2 right-4 hidden -translate-y-1/2 md:inline-flex']}
         data-lightbox-next
         aria-label="Next photo"
       >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          aria-hidden="true"
-        >
-          <path d="M9 5l7 7-7 7" />
-        </svg>
+        <Fragment set:html={arrow('M9 5l7 7-7 7')} />
       </button>
     </>
   )}

@@ -11,7 +11,15 @@ import { dirname, join } from 'node:path';
 import { create } from 'fontkitten';
 
 const OUT = 'src/content/work';
-const SIZES = { landscape: [1600, 1200], portrait: [1200, 1600], about: [1200, 1500] };
+/** Sheet sizes. Covers are composed for the grid slot they occupy (see WorkGrid.astro), so nothing crops. */
+const SIZES = {
+  landscape: [1600, 1200], // 4:3
+  portrait: [1200, 1600], // 3:4
+  square: [1400, 1400], // 1:1
+  wide: [1600, 1000], // 16:10
+  photo: [1600, 1067], // 3:2
+  about: [1200, 1500], // 4:5
+};
 
 const INK = '#171310';
 const AMBER = '#E9A23B';
@@ -1219,10 +1227,10 @@ function stairProfile(o) {
 }
 D['oak-stair-rebuild-irwin/cover'] = (L, b) => {
   const out = [];
-  const rises = 13;
-  const S = Math.min(b.w / 12.6, b.h / 11.2);
-  const floor = b.y + b.h * 0.9;
-  const x0 = b.x + 1.9 * S;
+  const rises = 11;
+  const S = Math.min(b.w / 15.5, b.h / 10.6);
+  const floor = b.y + b.h * 0.92;
+  const x0 = b.x + 2.4 * S;
   const { pts, rise, run, inch, topX, topY } = stairProfile({
     rises,
     riseIn: 7.375,
@@ -2239,7 +2247,7 @@ const PROJECTS = {
     title: 'Kitchen Remodel and Trim',
     location: 'Latrobe, PA',
     scale: '1/2" = 1\'-0"',
-    cover: ['landscape', 'Elevation'],
+    cover: ['square', 'Elevation'],
     gallery: [
       ['landscape', 'Header framing'],
       ['landscape', 'Crown section'],
@@ -2250,7 +2258,7 @@ const PROJECTS = {
     title: 'Oak Stair Rebuild',
     location: 'Irwin, PA',
     scale: '3/4" = 1\'-0"',
-    cover: ['portrait', 'Section'],
+    cover: ['wide', 'Section'],
     gallery: [
       ['portrait', 'Nosing detail'],
       ['landscape', 'Newel joint'],
@@ -2261,7 +2269,7 @@ const PROJECTS = {
     title: 'Farmhouse Porch Restoration',
     location: 'Mount Pleasant, PA',
     scale: '1/4" = 1\'-0"',
-    cover: ['landscape', 'Elevation'],
+    cover: ['photo', 'Elevation'],
     gallery: [
       ['landscape', 'Joist repair'],
       ['portrait', 'Column'],

@@ -11,9 +11,8 @@ export const hero = {
   ctaMobile: 'Call Jordan',
   ctaDesktop: 'Start a conversation',
   secondary: 'See the work',
-  /** The at-a-glance column beside the headline on large screens. */
-  glanceLabel: 'At a glance',
-  since: (year: number) => `Est. ${year}`,
+  /** The title block beside the headline on large screens. */
+  glance: { label: 'At a glance', basedIn: 'Based in', since: 'Since', credentials: 'Credentials' },
   licensed: 'Licensed & insured',
 };
 
@@ -38,6 +37,7 @@ export const work = {
   indexHeading: 'Work',
   indexLead: 'Decks, built-ins, stairs, porches and remodels around Westmoreland County.', // TODO: area
   count: (n: number, from: number, to: number) => `${n} projects · ${from}–${to}`,
+  closing: 'Have something like this in mind?',
   next: 'Next',
   previous: 'Previous',
   location: 'Location',
@@ -45,6 +45,7 @@ export const work = {
   year: 'Year',
   openPhoto: (n: number, total: number) => `Open photo ${n} of ${total}`,
   photoOf: (n: number, total: number) => `Photo ${n} of ${total}`,
+  drawing: (alt: string) => `Drawing: ${alt}`,
   close: 'Close',
 };
 
@@ -62,10 +63,6 @@ export const about = {
   ],
   portraitAlt:
     'Drawing of the workbench and tool wall in Jordan’s shop: a hand plane, four chisels, a framing square and a mallet', // TODO: real portrait
-};
-
-export const testimonials = {
-  heading: 'What clients say',
 };
 
 export const process = [
@@ -89,6 +86,8 @@ export const contact = {
   leadNoForm:
     'The easiest way to reach me is a call or a text. If it is easier to write it down, send an email and I will get back to you within a business day.',
   links: { call: 'Call', text: 'Text', email: 'Email', hours: 'Hours' },
+  call: (number: string) => `Call ${number}`,
+  textInstead: 'Text instead',
   form: {
     name: 'Your name',
     reach: 'Phone or email',
@@ -144,6 +143,14 @@ export const notFound = {
   heading: 'Nothing here.',
   text: 'That page does not exist, or it moved.',
   link: 'Back to the front page',
+  /** The 404 is set as a drawing sheet's title block. */
+  block: {
+    project: 'Project',
+    projectValue: 'Page not found',
+    location: 'Location',
+    drawing: 'Drawing',
+    sheet: 'Sheet',
+  },
 };
 
 export const skipLink = 'Skip to content';

@@ -39,14 +39,14 @@ const example = (id: string) => work.find((e) => e.id === id);
                   ex && (
                     <a
                       href={withBase(`/work/${ex.id}/`)}
-                      class="group/ex focus-ring block w-full rounded-md md:w-64"
+                      class="group/ex focus-ring block w-full rounded-md md:w-80"
                     >
-                      <figure class="aspect-[4/3] overflow-hidden rounded-md bg-ink-900">
+                      <figure class="overflow-hidden rounded-md bg-ink-900">
                         <WorkImage
-                          src={ex.data.cover}
+                          src={ex.data.gallery[0]?.src ?? ex.data.cover}
                           alt=""
-                          sizes="(min-width: 48rem) 16rem, 100vw"
-                          class="work-img size-full object-cover group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
+                          sizes="(min-width: 48rem) 20rem, 100vw"
+                          class="work-img block h-auto w-full group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
                         />
                       </figure>
                       <span class="mt-3 block text-label uppercase text-fg-3">{copy.example}</span>

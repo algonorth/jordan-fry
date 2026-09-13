@@ -2,7 +2,8 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import WorkGrid from '../../components/WorkGrid.astro';
-import { meta, work } from '../../data/copy';
+import { meta, work, hero } from '../../data/copy';
+import { withBase } from '../../lib/url';
 
 const entries = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
 const years = entries.map((e) => e.data.year);
@@ -20,6 +21,15 @@ const count = work.count(entries.length, Math.min(...years), Math.max(...years))
         <p class="mt-6 max-w-2xl text-lead text-fg-2">{work.indexLead}</p>
       </div>
       <WorkGrid entries={entries} />
+      <div class="mt-20 lg:mt-28" data-reveal data-primary-cta>
+        <div class="rule" aria-hidden="true"></div>
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-6">
+          <p class="max-w-md font-display text-h3 text-fg">{work.closing}</p>
+          <a href={withBase('/#contact')} class="btn-primary focus-ring">
+            {hero.ctaDesktop}
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 </Base>
