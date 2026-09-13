@@ -105,7 +105,7 @@ more generous because this site is editorial.
 | Header          | gains `bg-ink-950 border-b border-line` past 24px of scroll: opaque, no backdrop blur (blur smeared the dust behind it; any translucency let display type ghost through)                                                                                                                                                                                                                                                                                                                                                                   |
 | Call bar        | `translate-y-full → 0` over `--duration-base`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Page transition | `@view-transition { navigation: auto }`; root fades out 0.3s and fades/rises in 0.55s (8px); `view-transition-name: cover-<id>` on the cover figure in the grid and on the detail page morphs the cover                                                                                                                                                                                                                                                                                                                                    |
-| Hero particles  | see "Hero" below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Hero particles  | see "Hero" below; after the intro the name _is_ the particles (one per device pixel, pixel for pixel the type): the pointer or a finger blows letters into dust that drifts back, a click or tap anywhere in the hero gusts the whole name apart and it re-forms in about two seconds, scrolling releases it into the shaft, and a few spare grains lift off the letters while idle                                                                                                                                                        |
 
 Durations: `--duration-fast` 150ms, `--duration-base` 300ms, `--duration-slow` 600ms. Easing:
 `ease-out-soft` `cubic-bezier(0.22, 1, 0.36, 1)`. The OS `prefers-reduced-motion` flag is not
@@ -160,13 +160,24 @@ lg:grid-cols-3 divide-x divide-line`, each cell `px-5 py-4` with a `text-label` 
 Since / Credentials) over a `text-sm text-fg` value; hidden below lg. `h1#hero-name` = two block
 spans (`Jordan` / `Fry`), `font-display text-display font-[350] text-fg`, `font-variation-settings:
 "opsz" 144`; `html[data-hero-intro="pending"]` (set by an inline pre-paint probe when the hero will
-run) keeps it invisible so the name appears exactly once, formed by the dust; `.is-forming` on the
-hero takes over on the first rendered frame, and `.is-lit` raises the headline to 100% over 1.1s
-while the name motes fade out (drift 0.9s, flight 2.1s, settle 0.9s: the dust spells the name within
-about three seconds of the first frame and the typeset name is fully there a second later). Six seconds
-after the name is lit the dust settles: `uGlobalAlpha` eases to 0.55 and the loop stops on that
-still frame (the field stays, dimmer and motionless; auto-motion has to come to rest); a pointer
-movement or a scroll wakes it for another six seconds. Without WebGL the flag is never set and the headline is the LCP
+run) keeps it invisible and `.is-forming` on the hero (added on the first rendered frame, kept for
+the life of the hero) keeps it that way: the type is never painted while the hero runs. The dust
+drifts 0.9s, flies into the glyphs over 2.1s (`.is-lit` marks the moment the name has formed), and
+over the next 0.9s the landed motes turn from glowing amber dust into flat linen pixels: the name is
+sampled at the canvas's device resolution, one mote per inked pixel with that pixel's coverage as
+the mote's alpha, drawn with normal blending over the additive shaft dust, so at rest it is the
+typeset headline pixel for pixel. Six seconds after that the ambient dust settles (`uGlobalAlpha`
+eases to 0.7 and the loop stops on that still frame; the name's pixels never dim); a pointer
+movement, a tap or a scroll wakes it for another six seconds. Any mote pushed more than a couple of
+pixels off its place is dust again (amber, soft, shimmering) until it is back: the pointer's field
+(open only while it moves, closing within about half a second of it stopping) and its 16 trail
+puffs (each easing in over 80 ms and gone 0.7 s later) blow letters off as it passes and they drift
+back right behind it; a click (on press) or a tap anywhere in the hero, not on a
+link, throws the whole name outward with a flat-cored gust and it flies back over about two seconds
+(three gusts may be in flight); scrolling releases the pixels into the shaft and they fade;
+400 spare grains parked on random pixels lift off on their own slow cycles while idle. The headline
+is `touch-action: pan-y` (a horizontal swipe blows the name, a vertical one scrolls),
+`user-select: none`, `cursor: default`: an object, not a run of text. Without WebGL the flag is never set and the headline is the LCP
 element as plain text; with it, the lead paragraph is. Positioning line `mt-8 max-w-xl text-lead
 text-fg-2 text-pretty`. Actions `mt-10 flex flex-wrap items-center gap-x-8 gap-y-4`: one primary
 (mobile "Call Jordan" `tel:`, md+ "Start a conversation" `#contact`) + one quiet link "See the work".
@@ -291,12 +302,18 @@ reveal on their own.
 
 ## Hero (three.js) — `src/lib/hero/`
 
-Stateless vertex-shader particles (one `Points` draw call, no GPGPU): amber dust drifts in a tilted
-light shaft, coalesces into the h1's glyphs (targets sampled from the same font at a fixed 200px,
-normalised to the measured h1 line boxes), parts around a damped pointer with a decaying trail, and
-dissolves into sparse ambient dust as the hero scrolls away. Orthographic camera in CSS pixels.
-Quality tiers 60k / 24k / 8k motes with a frame-time probe that steps down. The OS reduced-motion
-flag is ignored on purpose (Windows sets it whenever "Show animations" is off, and the dust has no
-parallax or zoom); `?motion=static` renders the finished frame for checks. WebGL absent: the CSS light
-shaft and the full-opacity h1 are the designed state.
+Stateless vertex-shader particles (two `Points` draw calls sharing one shader, no GPGPU): amber
+dust drifts in a tilted light shaft (18k / 10k / 5k motes by tier, additive), and the name (up to
+200k / 100k / 45k motes, normal blending, drawn after the dust) coalesces into the h1's glyphs.
+`sampleText` rasterises the headline at the canvas's own pixel ratio and turns every inked pixel
+into a target (its centre on the device grid, its coverage as alpha); when the glyphs hold more
+pixels than the tier allows, cells of 2+ device pixels are used instead. A landed, undisturbed name
+mote is drawn as a 1-device-px linen dot (`vSolid`); pushed off its place it is soft amber dust with
+depth of field. The pointer is a damped field with a decaying trail of puffs, taps are gusts (three
+slots, ages on the wall clock), and the scroll releases the name into sparse ambient dust. Orthographic
+camera in CSS pixels, the name origin snapped to the device grid. A frame-time probe halves the
+ambient dust and lowers the pixel ratio (re-sampling the name) when frames run long. The OS
+reduced-motion flag is ignored on purpose (Windows sets it whenever "Show animations" is off, and the
+dust has no parallax or zoom); `?motion=static` renders the shaft's dust once under the real headline.
+WebGL absent: the CSS light shaft and the full-opacity h1 are the designed state.
 Additive, premultiplied sprites; no tone mapping; colors from the `hero-*` tokens.

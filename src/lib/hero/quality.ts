@@ -1,17 +1,23 @@
 export type QualityTier = 0 | 1 | 2;
 
 export interface TierConfig {
-  particles: number;
+  /**
+   * The most motes the name may use. The name is sampled one mote per device pixel of its glyphs
+   * (with the pixel's coverage as the mote's alpha) whenever that fits; otherwise at two or more
+   * device pixels per mote.
+   */
+  nameCap: number;
+  /** Motes drifting in the light shaft around the name. */
+  ambient: number;
   dprCap: number;
-  nameFraction: number;
   sizeScale: number;
   trailCount: number;
 }
 
 export const TIERS: Record<QualityTier, TierConfig> = {
-  0: { particles: 60_000, dprCap: 2, nameFraction: 0.72, sizeScale: 1.0, trailCount: 8 },
-  1: { particles: 24_000, dprCap: 1.5, nameFraction: 0.7, sizeScale: 1.1, trailCount: 8 },
-  2: { particles: 8_000, dprCap: 1.25, nameFraction: 0.7, sizeScale: 1.25, trailCount: 8 },
+  0: { nameCap: 200_000, ambient: 18_000, dprCap: 2, sizeScale: 1.0, trailCount: 16 },
+  1: { nameCap: 100_000, ambient: 10_000, dprCap: 2, sizeScale: 1.1, trailCount: 16 },
+  2: { nameCap: 45_000, ambient: 5_000, dprCap: 2, sizeScale: 1.25, trailCount: 16 },
 };
 
 export interface DeviceEnv {

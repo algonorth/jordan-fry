@@ -1,7 +1,8 @@
 /**
- * Turns the headline's glyphs into particle targets. Sampling happens at a fixed font size on
- * a detached 2D canvas (device independent); results are normalised to the measured DOM line
- * boxes so the particles overlay the real <h1> at any viewport size without re-sampling.
+ * Turns the headline's glyphs into particle targets: the name is rasterised at the canvas's own
+ * device resolution and every inked pixel becomes one mote, with the pixel's coverage as the
+ * mote's alpha, so the settled dust reproduces the type pixel for pixel. When the glyphs hold more
+ * pixels than the tier allows, cells of two or more device pixels are used instead.
  */
 export interface LineMeasure {
   text: string;
@@ -28,28 +29,16 @@ export interface NameBox {
 
 export interface TargetSet {
   count: number;
-  /** count × (u, v) normalised to the name box */
-  uv: Float32Array;
-  /** normalised line geometry, used to detect when a re-sample is needed */
+  /** device px per cell: 1 is one mote per device pixel */
+  pitch: number;
+  /** count × (x, y): cell centres in device px from the name box's top-left corner */
+  xy: Float32Array;
+  /** count × coverage 0..1 */
+  cover: Float32Array;
+  /** indices of cells whose whole 3×3 neighbourhood is inked (safe places to probe a pixel) */
+  interior: Uint32Array;
+  /** normalised line geometry and the pitch, used to detect when a re-sample is needed */
   signature: number[];
-}
-
-export interface AssignedTargets {
-  target: Float32Array;
-  hasTarget: Float32Array;
-  assigned: number;
-}
-
-const SAMPLE_PX = 200;
-
-function mulberry32(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 function applyTransform(text: string, transform: string): string {
@@ -95,10 +84,12 @@ function primaryFamily(family: string): string {
   return first.replace(/^["']|["']$/g, '');
 }
 
+const PROBE_PX = 200;
+
 /** Resolves once the headline font renders on a canvas (Safari can resolve fonts.load() early). */
 export async function waitForFont(font: NameFont, timeoutMs = 3000): Promise<boolean> {
   const primary = primaryFamily(font.family);
-  const spec = `${font.weight} ${SAMPLE_PX}px "${primary}"`;
+  const spec = `${font.weight} ${PROBE_PX}px "${primary}"`;
   try {
     await document.fonts.load(spec, 'Jordan Fry');
   } catch {
@@ -107,7 +98,7 @@ export async function waitForFont(font: NameFont, timeoutMs = 3000): Promise<boo
   const ctx = document.createElement('canvas').getContext('2d');
   if (!ctx) return false;
   const probe = (family: string) => {
-    ctx.font = `${font.weight} ${SAMPLE_PX}px ${family}`;
+    ctx.font = `${font.weight} ${PROBE_PX}px ${family}`;
     return ctx.measureText('Jordan Fry').width;
   };
   const fallback = probe('monospace');
@@ -119,100 +110,104 @@ export async function waitForFont(font: NameFont, timeoutMs = 3000): Promise<boo
   return false;
 }
 
-export function sampleText(nb: NameBox, opts: { alphaThreshold?: number; seed?: number } = {}): TargetSet {
-  const threshold = opts.alphaThreshold ?? 128;
-  const rnd = mulberry32(opts.seed ?? 7);
+const EMPTY: TargetSet = {
+  count: 0,
+  pitch: 1,
+  xy: new Float32Array(0),
+  cover: new Float32Array(0),
+  interior: new Uint32Array(0),
+  signature: [],
+};
+
+/**
+ * Samples the name at `dpr` device pixels per CSS pixel, one mote per `pitch` device pixels,
+ * choosing the smallest pitch whose mote count fits `cap`.
+ */
+export function sampleText(nb: NameBox, o: { dpr: number; cap: number }): TargetSet {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  const out: number[] = [];
-  const signature: number[] = [];
-  if (!ctx) return { count: 0, uv: new Float32Array(0), signature };
+  if (!ctx) return EMPTY;
+  let set = rasterise(ctx, canvas, nb, o.dpr, 1);
+  if (set.count > o.cap) {
+    let pitch = Math.max(2, Math.ceil(Math.sqrt(set.count / o.cap)));
+    set = rasterise(ctx, canvas, nb, o.dpr, pitch);
+    while (set.count > o.cap && pitch < 6) set = rasterise(ctx, canvas, nb, o.dpr, ++pitch);
+  }
+  return set;
+}
 
-  const scale = SAMPLE_PX / nb.font.fontSizePx;
+function rasterise(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  nb: NameBox,
+  dpr: number,
+  pitch: number,
+): TargetSet {
+  const scale = dpr / pitch; // canvas px per CSS px
+  const xy: number[] = [];
+  const cover: number[] = [];
+  const interior: number[] = [];
+  const signature: number[] = [pitch];
+  const pad = 16;
+  const setFont = () => {
+    ctx.font = `${nb.font.weight} ${nb.font.fontSizePx * scale}px ${nb.font.family}`;
+    if ('letterSpacing' in ctx)
+      (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing =
+        `${nb.font.letterSpacingPx * scale}px`;
+  };
   for (const line of nb.lines) {
     const text = applyTransform(line.text, nb.font.transform);
     if (!text) continue;
-    const pad = 24;
-    ctx.font = `${nb.font.weight} ${SAMPLE_PX}px ${nb.font.family}`;
-    if ('letterSpacing' in ctx)
-      (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing =
-        `${nb.font.letterSpacingPx * scale}px`;
+    const r = line.rect;
+    setFont();
     const m = ctx.measureText(text);
-    const asc = m.fontBoundingBoxAscent || SAMPLE_PX * 0.8;
-    const desc = m.fontBoundingBoxDescent || SAMPLE_PX * 0.2;
-    const W = Math.max(1, m.width);
-    const H = asc + desc;
-    canvas.width = Math.ceil(W + pad * 2);
-    canvas.height = Math.ceil(H + pad * 2);
-    ctx.font = `${nb.font.weight} ${SAMPLE_PX}px ${nb.font.family}`;
-    if ('letterSpacing' in ctx)
-      (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing =
-        `${nb.font.letterSpacingPx * scale}px`;
+    const asc = m.fontBoundingBoxAscent || nb.font.fontSizePx * scale * 0.8;
+    const desc = m.fontBoundingBoxDescent || nb.font.fontSizePx * scale * 0.2;
+    const boxH = r.height * scale;
+    canvas.width = Math.ceil(Math.max(m.width, r.width * scale)) + pad * 2;
+    canvas.height = Math.ceil(Math.max(boxH, asc + desc)) + pad * 2;
+    setFont(); // resizing the canvas resets its state
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#fff';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillText(text, pad, pad + asc);
+    // The baseline sits where the browser puts it in a line box: half the leading, then the ascent.
+    ctx.fillText(text, pad, pad + (boxH - (asc + desc)) / 2 + asc);
     const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Map the canvas line box onto the DOM line rect, then into name-box space.
-    const r = line.rect;
-    const sx = r.width / W;
-    const sy = r.height / H;
+    // The line's origin in device px from the name box corner, on the device pixel grid.
+    const ox = Math.round((r.left - nb.left) * dpr);
+    const oy = Math.round((r.top - nb.top) * dpr);
     signature.push(
       (r.left - nb.left) / nb.width,
       (r.top - nb.top) / nb.height,
       r.width / nb.width,
       r.height / nb.height,
     );
+    const alpha = (x: number, y: number) => data[(y * width + x) * 4 + 3] ?? 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        if ((data[(y * width + x) * 4 + 3] ?? 0) <= threshold) continue;
-        const lx = (x - pad + rnd() - 0.5) * sx;
-        const ly = (y - pad + rnd() - 0.5) * sy;
-        out.push((r.left + lx - nb.left) / nb.width, (r.top + ly - nb.top) / nb.height);
+        const a = alpha(x, y);
+        if (a < 6) continue;
+        if (a >= 250 && x > 0 && y > 0 && x < width - 1 && y < height - 1) {
+          let full = true;
+          for (let j = -1; j <= 1 && full; j++)
+            for (let i = -1; i <= 1; i++)
+              if (alpha(x + i, y + j) < 250) {
+                full = false;
+                break;
+              }
+          if (full) interior.push(xy.length / 2);
+        }
+        xy.push(ox + (x - pad) * pitch + pitch / 2, oy + (y - pad) * pitch + pitch / 2);
+        cover.push(a / 255);
       }
     }
   }
-  return { count: out.length / 2, uv: Float32Array.from(out), signature };
-}
-
-/**
- * Deterministically maps sampled points onto particles. Name particles are interleaved with
- * ambient ones (7 of every 10) so any draw-range prefix keeps the same mix.
- */
-export function assignTargets(
-  set: TargetSet,
-  particleCount: number,
-  nameFraction: number,
-  seed: number,
-): AssignedTargets {
-  const target = new Float32Array(particleCount * 3);
-  const hasTarget = new Float32Array(particleCount);
-  const rnd = mulberry32(seed);
-  const perm = new Uint32Array(set.count);
-  for (let i = 0; i < set.count; i++) perm[i] = i;
-  for (let i = set.count - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    const t = perm[i]!;
-    perm[i] = perm[j]!;
-    perm[j] = t;
-  }
-  const per10 = Math.round(nameFraction * 10);
-  let k = 0;
-  let assigned = 0;
-  for (let i = 0; i < particleCount; i++) {
-    const isName = i % 10 < per10;
-    if (isName && k < set.count) {
-      const s = perm[k++]!;
-      target[i * 3] = set.uv[s * 2]!;
-      target[i * 3 + 1] = set.uv[s * 2 + 1]!;
-      target[i * 3 + 2] = rnd();
-      hasTarget[i] = 1;
-      assigned++;
-    } else {
-      target[i * 3 + 2] = rnd();
-      hasTarget[i] = 0;
-    }
-  }
-  return { target, hasTarget, assigned };
+  return {
+    count: xy.length / 2,
+    pitch,
+    xy: Float32Array.from(xy),
+    cover: Float32Array.from(cover),
+    interior: Uint32Array.from(interior),
+    signature,
+  };
 }

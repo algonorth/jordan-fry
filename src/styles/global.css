@@ -362,12 +362,9 @@ html[data-motion='static'] {
   .sheet :is(.f, .f2, .h, .hh, .x, .dot, .dust, .t, .tb) {
     opacity: 1;
   }
-  /* The particle hero ignores the OS flag (see lib/hero/index.ts); keep its handoff fades intact. */
+  /* The particle hero ignores the OS flag (see lib/hero/index.ts); keep its fade-in intact. */
   #hero-canvas {
     transition-duration: var(--duration-slow) !important;
-  }
-  [data-hero].is-lit .hero-name {
-    transition-duration: 1.1s !important;
   }
 }
 

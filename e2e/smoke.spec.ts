@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+/** Page-side access to the hero's pixel probe (`?debug=hero` exposes the handle on `window.__hero`). */
+type HeroWindow = Window & {
+  __hero?: {
+    probePoints(n?: number): [number, number][];
+    samplePixel(x: number, y: number): [number, number, number, number];
+  };
+};
+const brightnessAt = (page: import('@playwright/test').Page, x: number, y: number) =>
+  page.evaluate(
+    ([px, py]) => {
+      const h = (window as HeroWindow).__hero;
+      if (!h) return -1;
+      const [r, g, b] = h.samplePixel(px, py);
+      return Math.max(r, g, b);
+    },
+    [x, y] as const,
+  );
+
 test.describe('home', () => {
   test('headline paints first and the particle hero lights it up', async ({ page }) => {
     const errors: string[] = [];
@@ -7,20 +25,55 @@ test.describe('home', () => {
     page.on('console', (m) => {
       if (m.type() === 'error') errors.push(m.text());
     });
-    await page.goto('/?gl=software');
+    await page.goto('/?gl=software&debug=hero');
     const h1 = page.locator('#hero-name');
     await expect(h1).toBeVisible();
     await expect(h1).toHaveText(/Jordan\s*Fry/);
-    // The headline is hidden from first paint while the dust forms it, then shown in full. The
-    // pre-paint flag may already have handed over to `.is-forming` by the time we look.
+    // The headline is hidden from first paint while the dust forms it. The pre-paint flag may
+    // already have handed over to `.is-forming` by the time we look.
     await expect(h1).toHaveCSS('opacity', '0');
     await expect(page.locator('#hero-canvas')).toHaveClass(/(?:^|\s)is-live(?:\s|$)/, { timeout: 20_000 });
     await expect(page.locator('html')).not.toHaveAttribute('data-hero-intro', 'pending');
     await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-forming(?:\s|$)/);
     await expect(h1).toHaveCSS('opacity', '0');
     await expect(page.locator('[data-hero]')).toHaveClass(/(?:^|\s)is-lit(?:\s|$)/, { timeout: 30_000 });
-    await expect(h1).toHaveCSS('opacity', '1', { timeout: 5_000 });
+    // From here on the dust is the name: the type stays unpainted and a pixel well inside a glyph
+    // is linen in the drawing buffer.
+    await expect(h1).toHaveCSS('opacity', '0');
+    const points = await page.evaluate(() => (window as HeroWindow).__hero?.probePoints(3) ?? []);
+    expect(points.length).toBeGreaterThan(0);
+    const [x, y] = points[0]!;
+    await expect.poll(() => brightnessAt(page, x, y), { timeout: 15_000 }).toBeGreaterThan(150);
     expect(errors).toEqual([]);
+  });
+
+  test('the name is dust: the pointer blows a pixel off its letter and a tap scatters it', async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto('/?gl=software&debug=hero');
+    const hero = page.locator('[data-hero]');
+    await expect(hero).toHaveClass(/(?:^|\s)is-lit(?:\s|$)/, { timeout: 40_000 });
+    const points = await page.evaluate(() => (window as HeroWindow).__hero?.probePoints(3) ?? []);
+    expect(points.length).toBeGreaterThan(0);
+    const [x, y] = points[0]!;
+    await expect.poll(() => brightnessAt(page, x, y), { timeout: 15_000 }).toBeGreaterThan(150);
+    if (!isMobile) {
+      // A pointer arriving on that pixel pushes it away: the spot goes dark.
+      await page.mouse.move(x - 60, y, { steps: 6 });
+      await page.mouse.move(x, y, { steps: 6 });
+      await expect.poll(() => brightnessAt(page, x, y), { timeout: 10_000 }).toBeLessThan(80);
+      // Once the pointer has left and its trail has died down, the pixel is back. (The dust runs
+      // partly on rendered time, which lags real time under software WebGL: hence the long waits.)
+      await page.mouse.move(x + 900, y + 400, { steps: 6 });
+      await expect.poll(() => brightnessAt(page, x, y), { timeout: 25_000 }).toBeGreaterThan(150);
+    }
+    // A tap scatters the name; it re-forms within a few seconds.
+    if (isMobile) await page.touchscreen.tap(x, y);
+    else await page.mouse.click(x, y);
+    await expect.poll(() => brightnessAt(page, x, y), { timeout: 10_000 }).toBeLessThan(80);
+    await expect.poll(() => brightnessAt(page, x, y), { timeout: 25_000 }).toBeGreaterThan(150);
+    await expect(page.locator('#hero-name')).toHaveText(/Jordan\s*Fry/);
   });
 
   test('the OS reduced-motion flag does not stop the intro', async ({ browser }) => {

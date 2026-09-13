@@ -6,8 +6,9 @@
  * flag (see lib/hero/index.ts); `?motion=static` renders the finished frame for checks.
  *
  * The inline script below runs before the headline is parsed: if the hero is going to run it marks
- * `<html data-hero-intro="pending">`, which keeps the headline invisible so the dust can form it. Every
- * path that does not reach a live first frame clears the flag (fallback, static, failure, timeout).
+ * `<html data-hero-intro="pending">`, which keeps the headline invisible so the dust can form it and
+ * then be it (the type is never painted while the hero runs). Every path that does not reach a live
+ * first frame clears the flag (fallback, static, failure, timeout).
  */
 ---
 
@@ -74,7 +75,7 @@
   const allowSoftwareGL = params.get('gl') === 'software';
   const debug = params.get('debug') === 'hero';
   const pending = document.documentElement.dataset.heroIntro === 'pending';
-  /** Lets the headline show. Live mode calls it on its first frame, after `.is-forming` took over. */
+  /** Clears the pre-paint flag. Live mode calls it on its first frame, after `.is-forming` took over. */
   const reveal = () => {
     delete document.documentElement.dataset.heroIntro;
   };
@@ -145,7 +146,7 @@
           });
         })
         .then((h) => {
-          log(`mounted: mode ${h.mode}, tier ${h.tier} (${[60000, 24000, 8000][h.tier]} motes)`);
+          log(`mounted: mode ${h.mode}, tier ${h.tier}, ${h.motes} motes`);
           if (h.mode !== 'live') reveal();
         })
         .catch((e: unknown) => {

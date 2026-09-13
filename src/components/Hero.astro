@@ -54,20 +54,23 @@ const glance = [
 
 <style>
   /*
-   * Intro choreography (live particle mode only; see HeroCanvas.astro and lib/hero/index.ts).
-   * The name appears exactly once, formed by the dust: `html[data-hero-intro="pending"]` (set inline
-   * before first paint when the hero will run) and then `.is-forming` on the hero keep the headline
-   * invisible while the motes drift and fly into the glyphs; `.is-lit` raises it to 100% while the
-   * name motes fade out, so the dust becomes the typeset name. Without WebGL, or if the hero fails
-   * to start, the flag is cleared and the headline simply shows. The hero runs regardless of the
-   * OS reduced-motion flag, so the transition below is exempted from the global reset in global.css.
+   * Live particle mode (see HeroCanvas.astro and lib/hero/index.ts): the headline is real text for
+   * readers, screen readers and search engines, but it is never painted while the hero runs.
+   * `html[data-hero-intro="pending"]` (set inline before first paint when the hero will run) and
+   * then `.is-forming` on the hero keep it invisible: the dust drifts, flies into the glyphs and
+   * from then on *is* the name, one mote per device pixel, so nothing is ever hidden under type.
+   * Without WebGL, or if the hero fails to start or loses its context, the flag and the class are
+   * cleared and the headline simply shows. Horizontal swipes across the name reach the dust on
+   * touch screens while vertical ones still scroll; the name is an object, not text to select.
    */
   html[data-hero-intro='pending'] .hero-name,
   [data-hero].is-forming .hero-name {
     opacity: 0;
   }
-  [data-hero].is-lit .hero-name {
-    opacity: 1;
-    transition: opacity 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+  .hero-name {
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
   }
 </style>

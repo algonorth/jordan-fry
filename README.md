@@ -63,17 +63,23 @@ Without a key the form is omitted and the contact section shows the call, text a
 
 ## The hero
 
-Warm dust motes drift in a light shaft, coalesce into the headline, part around the pointer, and
-dissolve as the page scrolls. The `<h1>` is real text in the HTML; when the hero is going to run, a
-tiny inline probe keeps it invisible from first paint so the name appears exactly once, formed by the
-dust: the motes drift for a beat, fly in and form the glyphs over about two seconds, then fade out as the
-typeset headline rises to full strength. Without WebGL, or if the hero fails to start, the headline
-simply shows. Quality tiers (60k / 24k / 8k motes) are
-picked from the device and stepped down if frames run long. The whole site ignores the OS
+Warm dust motes drift in a light shaft, coalesce into the headline, and from then on _are_ the
+headline. The `<h1>` is real text in the HTML for readers, screen readers and search engines, but
+while the hero runs it is never painted: a tiny inline probe keeps it invisible from first paint,
+the motes drift for a beat, fly in and form the glyphs over about two seconds, and then settle into
+one mote per device pixel of the type, each a flat linen dot with that pixel's own coverage, so the
+resting name is the typeset headline pixel for pixel with nothing hidden underneath. Whatever moves a
+pixel turns it back into dust until it drifts home: the pointer (or a finger swiped across the
+name) blows letters off as it passes, a click or tap anywhere in the hero throws the whole name
+outward and it re-forms in about two seconds, scrolling releases it into the shaft, and a few spare
+grains lift off the letters now and then while idle. Without WebGL, or if the hero fails to start,
+the headline simply shows. Quality tiers cap the name at 200k / 100k / 45k motes (a coarser cell is
+used when the glyphs hold more device pixels than that) with 18k / 10k / 5k ambient motes, chosen
+from the device and stepped down if frames run long. The whole site ignores the OS
 reduced-motion flag on purpose (Windows reports it whenever "Show animations in Windows" is off, so
 the hero, the section reveals and the self-drafting sheets would all be lost on such machines);
-`?motion=static` turns every animation off and renders the hero as one still frame. Without WebGL
-the CSS light shaft and the headline are the designed state.
+`?motion=static` turns every animation off and renders the shaft's dust as one still frame under the
+typeset headline. Without WebGL the CSS light shaft and the headline are the designed state.
 
 Debugging: `/?debug=hero` shows an on-screen readout of every decision the hero makes (GPU probe
 verdict and renderer, tier, mount result, mirrored console errors such as shader failures) and overlays
