@@ -101,7 +101,7 @@ more generous because this site is editorial.
 | Image hover     | `transform: scale(1.03)` + `brightness(1.06)` over 0.8s inside an `overflow-hidden` wrapper; card title turns `amber-300`                                                                                                                    |
 | Lightbox swipe  | a mostly horizontal pointer travel ≥ 40px on the stage moves one photo (`lib/lightbox.ts`)                                                                                                                                                   |
 | Nav underline   | `link-nav`: a 1px `currentColor` underline grows from the left over `--duration-base`; stays for `aria-current="page"`                                                                                                                       |
-| Header          | gains `bg-ink-950/95 border-b border-line` past 24px of scroll (no backdrop blur: it would smear the dust behind it into an amber blob; 95% so display type never ghosts through)                                                            |
+| Header          | gains `bg-ink-950 border-b border-line` past 24px of scroll: opaque, no backdrop blur (blur smeared the dust behind it; any translucency let display type ghost through)                                                                     |
 | Call bar        | `translate-y-full → 0` over `--duration-base`                                                                                                                                                                                                |
 | Page transition | `@view-transition { navigation: auto }`; root fades out 0.3s and fades/rises in 0.55s (8px); `view-transition-name: cover-<id>` on the cover figure in the grid and on the detail page morphs the cover                                      |
 | Hero particles  | see "Hero" below                                                                                                                                                                                                                             |
@@ -146,8 +146,9 @@ Sections are numbered in page order (`sections` in `data/copy.ts`): 01 Selected 
 
 ## Section recipes
 
-**Hero** — `relative min-h-[88svh] flex flex-col justify-end pb-16 md:pb-24`, 88svh so the first
-section head peeks in as the scroll cue (it is rendered `static`, without the reveal). Inside:
+**Hero** — `relative min-h-[calc(84svh-4rem)] flex flex-col justify-end pb-16 md:pb-24` (the 4rem header
+is in flow, so the hero ends at 84% of the viewport at any height) so the first section head's
+eyebrow peeks in as the scroll cue (it is rendered `static`, without the reveal). Inside:
 `lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10`: the headline column shrinks,
 the at-a-glance title block keeps its natural width at every lg width: `dl.border-y.border-line
 lg:grid-cols-3 divide-x divide-line`, each cell `px-5 py-4` with a `text-label` term (Based in /
@@ -157,7 +158,10 @@ spans (`Jordan` / `Fry`), `font-display text-display font-[350] text-fg`, `font-
 run) keeps it invisible so the name appears exactly once, formed by the dust; `.is-forming` on the
 hero takes over on the first rendered frame, and `.is-lit` raises the headline to 100% over 1.1s
 while the name motes fade out (drift 0.9s, flight 2.1s, settle 0.9s: the dust spells the name within
-about three seconds of the first frame and the typeset name is fully there a second later). Without WebGL the flag is never set and the headline is the LCP
+about three seconds of the first frame and the typeset name is fully there a second later). Six seconds
+after the name is lit the dust settles (`uGlobalAlpha` eases to 0 and the loop stops on a clear
+frame: the still frame is the designed static state, and auto-motion has to come to rest); a
+pointer movement wakes it for another six seconds. Without WebGL the flag is never set and the headline is the LCP
 element as plain text; with it, the lead paragraph is. Positioning line `mt-8 max-w-xl text-lead
 text-fg-2 text-pretty`. Actions `mt-10 flex flex-wrap items-center gap-x-8 gap-y-4`: one primary
 (mobile "Call Jordan" `tel:`, md+ "Start a conversation" `#contact`) + one quiet link "See the work".
@@ -165,12 +169,11 @@ text-fg-2 text-pretty`. Actions `mt-10 flex flex-wrap items-center gap-x-8 gap-y
 **Work grid** — `SectionHead` (eyebrow only) then `mt-10 lg:mt-14`; `grid md:grid-cols-2
 lg:grid-cols-12 gap-y-14 gap-x-6 lg:gap-x-8 lg:gap-y-16` (one column on phones, two on tablets, the
 editorial 12-column rhythm from lg; the fifth and sixth cards span both tablet columns; every card
-is `md:self-end lg:self-auto` so tablet captions share a baseline); pattern by index: `col-span-7
-aspect-[4/3] lg:mt-24`, `col-span-5 aspect-[3/4]`, `col-span-5 aspect-square lg:-mt-16`,
-`col-span-7 aspect-[16/10]`, `col-span-8 col-start-3 aspect-[3/2]`, `col-span-6 col-start-4
-aspect-[4/3]`. The offsets are tuned so the two cards of a row end within a few pixels of each other
-(the stagger sits at the top of the row, never as a void under a caption); the sixth is centred so
-the index never ends on a lone small card. Every
+is `md:self-end`, so the two cards of a row share a bottom edge at every width and the stagger
+shows at the top of the row by itself, never as a void under a caption); pattern by index:
+`col-span-7 aspect-[4/3]`, `col-span-5 aspect-[3/4]`, `col-span-5 aspect-square`, `col-span-7
+aspect-[16/10]`, `col-span-8 col-start-3 aspect-[3/2]`, `col-span-6 col-start-4 aspect-[4/3]`; the
+sixth is centred so the index never ends on a lone small card. Every
 cover sheet is generated at exactly its slot's aspect, so `object-cover` never crops a title block.
 Card (`WorkCard.astro`): `a.reveal-self.group`, cover `figure.reveal-img` with
 `view-transition-name`, then the caption `.card-meta mt-4 grid grid-cols-[2rem_1fr] gap-x-4`: index
@@ -222,7 +225,8 @@ gap-10 lg:gap-16 pt-6 md:pt-10`; the sheet in a `rounded-md bg-ink-900` figure a
 (`img.block.w-full.h-auto`, never cropped; `lg:col-span-7`, or `lg:col-span-6` for a portrait
 cover), the title block beside it bottom-aligned: `text-label` `{type} · {year}`, `mt-5 text-h1`
 title, `mt-6 max-w-2xl text-lead text-fg-2` summary. The meta strip (`ProjectMeta.astro`: `grid
-gap-6 border-y border-line py-6 sm:grid-cols-3`, `dt` label / `dd` value) closes the title column
+gap-6 border-y border-line py-6 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-10`, `dt` label /
+`dd` value, " · "-separated values wrapping only at the separators) closes the title column
 under a portrait cover (`lg:flex lg:flex-col lg:justify-end`, so the column earns its height) and
 sits `mt-10` under the hero for a landscape one; body `max-w-2xl text-body text-fg-2
 space-y-5`; gallery `mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12` alternating

@@ -129,7 +129,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   system.setTargets(assignTargets(set, system.count, cfg.nameFraction, SEED));
 
   const scroll = createScrollState(opts.heroEl, () => {
-    if (mode === 'live') start();
+    if (mode === 'live' && !asleep) start();
   });
   const updateNameBox = () => {
     const y = mode === 'static' ? nb.docTop : nb.docTop - window.scrollY;
@@ -206,6 +206,11 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   let forming = false;
   let lit = false;
   let morphStart = -1;
+  // The dust settles a few seconds after the typeset name has taken over (the still frame is the
+  // designed static state, and auto-motion longer than that needs a rest); a pointer wakes it.
+  let restAt = -1;
+  let asleep = false;
+  const REST_AFTER = 6;
   // Intro beats, in seconds of rendered time after the first frame: the canvas fades in over
   // 0.6s while the headline hands off to the dust; the dust drifts alone; then it flies in.
   const DRIFT_ALONE = 0.9;
@@ -243,6 +248,9 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     }
     uniforms.uDissolve.value +=
       (scroll.dissolveTarget - uniforms.uDissolve.value) * (1 - Math.exp(-dt / 0.14));
+    const resting = restAt >= 0 && clock >= restAt;
+    uniforms.uGlobalAlpha.value +=
+      ((resting ? 0 : 1) - uniforms.uGlobalAlpha.value) * (1 - Math.exp(-dt / 1.4));
 
     pointer.update(dt);
     const ps = pointer.state;
@@ -264,6 +272,14 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     if (!lit && morphStart >= 0 && clock >= morphStart + MORPH_SECS) {
       lit = true;
       opts.heroEl.classList.add('is-lit');
+      restAt = clock + REST_AFTER;
+    }
+    if (resting && uniforms.uGlobalAlpha.value < 0.004) {
+      // Fully settled: draw one clear frame and stop until something wakes the dust.
+      uniforms.uGlobalAlpha.value = 0;
+      renderOnce();
+      asleep = true;
+      return;
     }
     raf = requestAnimationFrame(tick);
   };
@@ -272,6 +288,17 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     last = performance.now();
     raf = requestAnimationFrame(tick);
   };
+  /** A pointer movement over the page brings the settled dust back for another while. */
+  const wake = () => {
+    if (mode !== 'live' || restAt < 0) return;
+    restAt = clock + REST_AFTER;
+    if (asleep) {
+      asleep = false;
+      start();
+    }
+  };
+  addEventListener('pointermove', wake, { passive: true });
+  dispose.push(() => removeEventListener('pointermove', wake));
   const stop = () => {
     if (raf) cancelAnimationFrame(raf);
     raf = 0;

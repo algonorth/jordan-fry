@@ -5,13 +5,27 @@ interface Props {
   class?: string;
 }
 const { rows, class: className } = Astro.props;
+/** " · " separated values wrap only at the separators. */
+const parts = (value: string) => value.split(' · ');
 ---
 
-<dl class:list={['grid gap-6 border-y border-line py-6 sm:grid-cols-3', className]}>
+<dl
+  class:list={[
+    'grid gap-6 border-y border-line py-6 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-10',
+    className,
+  ]}
+>
   {rows.map((m) => (
     <div>
       <dt class="text-label uppercase text-fg-3">{m.label}</dt>
-      <dd class:list={['mt-1 text-sm text-fg', m.cls]}>{m.value}</dd>
+      <dd class:list={['mt-1 text-sm text-fg', m.cls]}>
+        {parts(m.value).map((p, i) => (
+          <>
+            {i > 0 && ' · '}
+            <span class="whitespace-nowrap">{p}</span>
+          </>
+        ))}
+      </dd>
     </div>
   ))}
 </dl>
