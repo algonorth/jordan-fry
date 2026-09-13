@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import WorkImage from './WorkImage.astro';
+import Sheet from './Sheet.astro';
 import { withBase } from '../lib/url';
 
 interface Props {
@@ -12,19 +13,31 @@ interface Props {
 const { entry, aspect, index, sizes = '(min-width: 64rem) 50vw, 100vw' } = Astro.props;
 const { title, type, location, year, cover, placeholder } = entry.data;
 const town = location.split(',')[0];
+const sheet = placeholder && cover.format === 'svg';
 ---
 
 <a href={withBase(`/work/${entry.id}/`)} class="reveal-self group focus-ring block rounded-md">
   <figure
-    class:list={['reveal-img relative overflow-hidden rounded-md bg-ink-900', aspect]}
+    class:list={[
+      'relative overflow-hidden rounded-md bg-ink-900',
+      sheet ? 'sheet-frame' : 'reveal-img',
+      aspect,
+    ]}
     style={`view-transition-name: cover-${entry.id}`}
   >
-    <WorkImage
-      src={cover}
-      alt=""
-      sizes={sizes}
-      class="work-img size-full object-cover group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
-    />
+    {sheet ? (
+      <Sheet
+        src={cover}
+        class="work-img size-full group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
+      />
+    ) : (
+      <WorkImage
+        src={cover}
+        alt=""
+        sizes={sizes}
+        class="work-img size-full object-cover group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
+      />
+    )}
     {import.meta.env.DEV && placeholder && (
       <span class="absolute top-3 right-3 rounded-sm bg-ink-950/70 px-2 py-1 text-xs text-fg-3">
         TODO photo

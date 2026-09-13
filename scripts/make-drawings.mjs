@@ -58,7 +58,7 @@ function makeLettering() {
         );
       cx += (g.advanceWidth / UPM) * size + tracking * size;
     }
-    return `<g fill="${fill}" opacity="${opacity}">${uses.join('')}</g>`;
+    return `<g class="t" fill="${fill}" fill-opacity="${opacity}">${uses.join('')}</g>`;
   };
   const defsSvg = () =>
     `<defs>${Array.from(defs, ([id, d]) => `<path id="g${id}" d="${d}"/>`).join('')}</defs>`;
@@ -92,16 +92,25 @@ const hatchDefs = () =>
       `<pattern id="hatch${st}" width="${st}" height="${st}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="h" x1="0" y1="0" x2="0" y2="${st}"/></pattern>`,
   ).join('');
 
-/** Drafting primitives. Classes: o outline · s secondary · h hatch · f fill · d dimension · x hidden */
+/**
+ * Drafting primitives. Classes: o outline · s secondary · h hatch · f fill · d dimension · x hidden.
+ * Solid stroked elements carry `pathLength="1"` and their drafting order in `--k`, so an inline
+ * sheet can draw itself line by line with nothing but CSS (see `.sheet` in global.css). Hidden
+ * (dashed) lines keep their dash and fade in with the fills instead.
+ */
+let strokeIndex = 0;
+const STROKED = new Set(['o', 's', 'd', 'frame']);
+const attrs = (c) =>
+  STROKED.has(c) ? ` class="${c}" pathLength="1" style="--k:${strokeIndex++}"` : ` class="${c}"`;
 const P = {
   line: (x1, y1, x2, y2, c = 'o') =>
-    `<line class="${c}" x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}"/>`,
+    `<line${attrs(c)} x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}"/>`,
   rect: (x, y, w, h, c = 'o') =>
-    `<rect class="${c}" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}"/>`,
-  circle: (cx, cy, rad, c = 'o') => `<circle class="${c}" cx="${r(cx)}" cy="${r(cy)}" r="${r(rad)}"/>`,
-  path: (d, c = 'o') => `<path class="${c}" d="${d}"/>`,
+    `<rect${attrs(c)} x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}"/>`,
+  circle: (cx, cy, rad, c = 'o') => `<circle${attrs(c)} cx="${r(cx)}" cy="${r(cy)}" r="${r(rad)}"/>`,
+  path: (d, c = 'o') => `<path${attrs(c)} d="${d}"/>`,
   poly: (pts, c = 'o', close = false) =>
-    `<path class="${c}" d="M${pts.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}${close ? 'Z' : ''}"/>`,
+    `<path${attrs(c)} d="M${pts.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}${close ? 'Z' : ''}"/>`,
   /** parallel lines inside a rect: dir 'h' (horizontal lines) or 'v' */
   lines: (x, y, w, h, step, dir = 'h', c = 's', offset = 0) => {
     const out = [];
@@ -113,7 +122,7 @@ const P = {
   /** 45° hatch: a rect filled with a pattern (registered per sheet, see `hatchDefs`) */
   hatch: (x, y, w, h, step = 14) => {
     hatchSteps.add(step);
-    return `<rect fill="url(#hatch${step})" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}"/>`;
+    return `<rect class="hh" fill="url(#hatch${step})" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}"/>`;
   },
   /** brick running bond inside a rect */
   brick: (x, y, w, h, bw = 44, bh = 18, c = 'h') => {
@@ -190,6 +199,7 @@ function note(L, x, y, tx, ty, label, o = {}) {
 function sheet(name, [W, H], meta, draw) {
   const L = makeLettering();
   hatchSteps.clear();
+  strokeIndex = 0;
   const rnd = mulberry32(hash(name));
   const M = Math.round(Math.min(W, H) * 0.045); // sheet margin
   const TB = 92; // title block height
@@ -214,9 +224,10 @@ function sheet(name, [W, H], meta, draw) {
     const rad = 1.2 + rnd() * rnd() * 3.2;
     const op = 0.12 + rnd() * 0.42;
     if (y > H - M - TB - 6) continue; // never over the title block
-    dust.push(`<circle cx="${r(x)}" cy="${r(y)}" r="${r(rad)}" fill="${AMBER}" opacity="${op.toFixed(2)}"/>`);
+    dust.push(`<circle cx="${r(x)}" cy="${r(y)}" r="${r(rad)}" fill="${AMBER}" fill-opacity="${op.toFixed(2)}"/>`);
   }
 
+  const frame = P.rect(M, M, W - 2 * M, H - 2 * M, 'frame') + P.line(M, H - M - TB, W - M, H - M - TB, 'frame');
   const content = draw(L, box);
 
   // title block: cells separated by hairlines
@@ -245,36 +256,41 @@ function sheet(name, [W, H], meta, draw) {
     cx += w;
   });
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${meta.alt}">
+  // Every id is namespaced per sheet so several sheets can be inlined in one document.
+  const ns = `s${(hash(name) % 46655).toString(36)}`;
+  const namespaced = (svg) =>
+    svg
+      .replace(/ id="([\w-]+)"/g, (_, id) => ` id="${ns}-${id}"`)
+      .replace(/url\(#([\w-]+)\)/g, (_, id) => `url(#${ns}-${id})`)
+      .replace(/href="#([\w-]+)"/g, (_, id) => `href="#${ns}-${id}"`);
+  return namespaced(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${meta.alt}" style="--n:${strokeIndex}">
 <style>
-.o{fill:none;stroke:${AMBER};stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
-.s{fill:none;stroke:${OAK};stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
-.h{fill:none;stroke:${AMBER};stroke-width:1.4;stroke-linecap:round;opacity:.26}
-.f{fill:${AMBER};opacity:.07;stroke:none}
-.f2{fill:${AMBER};opacity:.14;stroke:none}
-.x{fill:none;stroke:${OAK};stroke-width:2;stroke-dasharray:10 9;stroke-linecap:round;opacity:.6}
-.d{fill:none;stroke:${LINEN};stroke-width:1.5;stroke-linecap:round;opacity:.38}
-.dot{fill:${LINEN};opacity:.5;stroke:none}
-.frame{fill:none;stroke:${LINEN};stroke-width:1.5;opacity:.16}
+.o{fill:none;stroke:${AMBER};stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:.9}
+.s{fill:none;stroke:${OAK};stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:.6}
+.h{fill:none;stroke:${AMBER};stroke-width:1.4;stroke-linecap:round;stroke-opacity:.26}
+.f{fill:${AMBER};fill-opacity:.07;stroke:none}
+.f2{fill:${AMBER};fill-opacity:.14;stroke:none}
+.x{fill:none;stroke:${OAK};stroke-width:2;stroke-dasharray:10 9;stroke-linecap:round;stroke-opacity:.6}
+.d{fill:none;stroke:${LINEN};stroke-width:1.5;stroke-linecap:round;stroke-opacity:.38}
+.dot{fill:${LINEN};fill-opacity:.5;stroke:none}
+.frame{fill:none;stroke:${LINEN};stroke-width:1.5;stroke-opacity:.16}
 </style>
 <defs>
-<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.3" fill="${LINEN}" opacity=".07"/></pattern>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.3" fill="${LINEN}" fill-opacity=".07"/></pattern>
 <radialGradient id="lamp" cx="${lx}" cy="${ly}" r="0.9"><stop offset="0" stop-color="${AMBER}" stop-opacity=".22"/><stop offset=".45" stop-color="${AMBER}" stop-opacity=".06"/><stop offset="1" stop-color="${AMBER}" stop-opacity="0"/></radialGradient>
-<filter id="paper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${hash(name) % 977}" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .88 0 0 0 .07 0"/></filter>
+<filter id="paper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${hash(name) % 977}" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .88 0 0 0 .035 0"/></filter>
 </defs>
 <rect width="${W}" height="${H}" fill="${INK}"/>
-<rect width="${W}" height="${H}" fill="url(#grid)"/>
-<rect width="${W}" height="${H}" fill="url(#lamp)"/>
-<g>${dust.join('')}</g>
-<rect class="frame" x="${M}" y="${M}" width="${W - 2 * M}" height="${H - 2 * M}"/>
-<line class="frame" x1="${M}" y1="${ty}" x2="${W - M}" y2="${ty}"/>
+<g class="ground"><rect width="${W}" height="${H}" fill="url(#grid)"/><rect width="${W}" height="${H}" fill="url(#lamp)"/></g>
+<g class="dust">${dust.join('')}</g>
+${frame}
 <defs>${hatchDefs()}</defs>
-<g>${content}</g>
-<g>${cells.join('')}</g>
-<rect width="${W}" height="${H}" filter="url(#paper)" opacity=".5"/>
+<g class="drawing">${content}</g>
+<g class="tb">${cells.join('')}</g>
+<rect class="paper" width="${W}" height="${H}" filter="url(#paper)"/>
 ${L.defsSvg()}
 </svg>
-`;
+`);
 }
 
 /* ------------------------------------------------------------------ */

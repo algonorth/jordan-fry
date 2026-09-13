@@ -28,7 +28,7 @@ const featured = (await getCollection('work', ({ data }) => data.featured)).sort
         </a>
       </SectionHead>
       <div class="mt-10 lg:mt-14">
-        <WorkGrid entries={featured} peekFirst />
+        <WorkGrid entries={featured} />
       </div>
     </div>
   </section>

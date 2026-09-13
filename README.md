@@ -34,8 +34,8 @@ grep -rn "TODO" src scripts --include=*.ts --include=*.md --include=*.mjs
 ## Replacing placeholder photos
 
 Until there are photographs, every project image is a generated shop drawing (plan, elevation,
-section or detail, drawn from the project's own copy) on an ink drawing sheet with a title block. See
-"Drawing sheets" in `DESIGN.md`. To replace one: drop JPEGs next to the project's `index.md` (long
+section or detail, drawn from the project's own copy) on an ink drawing sheet with a title block, and
+each sheet draws itself line by line as it scrolls into view. See "Drawing sheets" in `DESIGN.md`. To replace one: drop JPEGs next to the project's `index.md` (long
 edge 1600 for covers and galleries, 2400 if a cover should fill a large screen), point `cover:` /
 `gallery:` at them, write a real `alt`, and set `placeholder: false`. Responsive `srcset` variants
 switch on automatically for raster images. A cover is shown whole at its own aspect beside the
@@ -69,9 +69,11 @@ tiny inline probe keeps it invisible from first paint so the name appears exactl
 dust: the motes drift for a beat, fly in and form the glyphs over about two seconds, then fade out as the
 typeset headline rises to full strength. Without WebGL, or if the hero fails to start, the headline
 simply shows. Quality tiers (60k / 24k / 8k motes) are
-picked from the device and stepped down if frames run long. The hero ignores the OS reduced-motion
-flag on purpose (Windows reports it whenever "Show animations in Windows" is off); `?motion=static`
-renders one still frame. Without WebGL the CSS light shaft and the headline are the designed state.
+picked from the device and stepped down if frames run long. The whole site ignores the OS
+reduced-motion flag on purpose (Windows reports it whenever "Show animations in Windows" is off, so
+the hero, the section reveals and the self-drafting sheets would all be lost on such machines);
+`?motion=static` turns every animation off and renders the hero as one still frame. Without WebGL
+the CSS light shaft and the headline are the designed state.
 
 Debugging: `/?debug=hero` shows an on-screen readout of every decision the hero makes (GPU probe
 verdict and renderer, tier, mount result, mirrored console errors such as shader failures) and overlays

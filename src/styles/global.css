@@ -251,6 +251,38 @@ html:has(dialog[open]) {
     scale 1.5s var(--ease-out-soft) calc(var(--i, 0) * 70ms);
 }
 
+/*
+ * Inline drawing sheets (Sheet.astro) draft themselves when their [data-reveal] group enters: the
+ * ground is there at once, solid lines draw in drafting order over ~2s (each element carries its
+ * order in --k and the sheet its count in --n), then hatch, fills, hidden lines, lettering, the
+ * title block and the dust fade in. A `.sheet-frame` figure has no wipe: the sheet is the reveal.
+ */
+.js [data-reveal] .sheet :is(.o, .s, .d, .frame) {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.8s var(--ease-out-soft)
+    calc(var(--k, 0) / max(var(--n, 1), 1) * 1.9s + 0.1s);
+}
+.js [data-reveal] .sheet :is(.f, .f2, .hh, .x, .dot, .dust) {
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-out-soft) 1.4s;
+}
+.js [data-reveal] .sheet :is(.t, .tb) {
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-out-soft) 2s;
+}
+[data-reveal].is-in .sheet :is(.o, .s, .d, .frame) {
+  stroke-dashoffset: 0;
+}
+[data-reveal].is-in .sheet :is(.f, .f2, .hh, .x, .dot, .dust, .t, .tb) {
+  opacity: 1;
+}
+.js [data-reveal] .sheet-frame .card-meta,
+.js [data-reveal] > .sheet-frame {
+  opacity: 1;
+  transform: none;
+}
+
 /* Film grain over everything: keeps the ink from reading as flat, costs one static layer. */
 .grain {
   position: fixed;
@@ -284,18 +316,25 @@ html:has(dialog[open]) {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+/*
+ * Motion off: `?motion=static` (set on <html> before first paint by Base.astro). The OS
+ * reduced-motion flag is deliberately not consulted anywhere on the site: Windows reports it
+ * whenever "Show animations in Windows" is off, which is common on machines that never asked for
+ * it, and nothing here parallaxes, zooms or hijacks scroll. Everything below collapses to its
+ * finished state; the hero's own handoff fades are the one exception.
+ */
+html[data-motion='static'] {
   *,
-  ::before,
-  ::after {
+  & ::before,
+  & ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
     animation: none !important;
   }
   [data-reveal] > *,
@@ -311,6 +350,12 @@ html:has(dialog[open]) {
   }
   [data-reveal] .reveal-img .work-img {
     scale: 1;
+  }
+  [data-reveal] .sheet :is(.o, .s, .d, .frame) {
+    stroke-dashoffset: 0;
+  }
+  [data-reveal] .sheet :is(.f, .f2, .hh, .x, .dot, .dust, .t, .tb) {
+    opacity: 1;
   }
   /* The particle hero ignores the OS flag (see lib/hero/index.ts); keep its handoff fades intact. */
   #hero-canvas {

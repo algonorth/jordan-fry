@@ -128,6 +128,58 @@ test.describe('work', () => {
     }
   });
 
+  test('the OS reduced-motion flag does not pre-draw the sheets; ?motion=static does', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/work/');
+    const last = page.locator('main ul li').last();
+    await expect(last).not.toHaveClass(/is-in/);
+    expect(
+      await last
+        .locator('svg.sheet .o')
+        .first()
+        .evaluate((el) => getComputedStyle(el).strokeDashoffset),
+    ).toBe('1px');
+    await page.goto('/work/?motion=static');
+    await expect(page.locator('html')).toHaveAttribute('data-motion', 'static');
+    await expect(page.locator('main ul li').last()).toHaveClass(/is-in/);
+    expect(
+      await page
+        .locator('main ul li')
+        .last()
+        .locator('svg.sheet .o')
+        .first()
+        .evaluate((el) => getComputedStyle(el).strokeDashoffset),
+    ).toBe('0px');
+  });
+
+  test('placeholder sheets are inlined and draft themselves on reveal', async ({ page }) => {
+    await page.goto('/work/');
+    const last = page.locator('main ul li').last();
+    const sheet = last.locator('svg.sheet');
+    await expect(sheet).toBeAttached();
+    await expect(sheet).toHaveAttribute('style', /--n:\d+/);
+    const before = await sheet
+      .locator('.o')
+      .first()
+      .evaluate((el) => getComputedStyle(el).strokeDashoffset);
+    expect(before).toBe('1px');
+    await last.scrollIntoViewIfNeeded();
+    await expect(last).toHaveClass(/is-in/);
+    await expect
+      .poll(
+        () =>
+          sheet
+            .locator('.o')
+            .first()
+            .evaluate((el) => getComputedStyle(el).strokeDashoffset),
+        {
+          timeout: 5000,
+        },
+      )
+      .toBe('0px');
+    await expect(sheet.locator('.tb')).toHaveCSS('opacity', '1', { timeout: 5000 });
+  });
+
   test('unknown routes get the 404 page', async ({ page }) => {
     const res = await page.goto('/nope/');
     expect(res?.status()).toBe(404);

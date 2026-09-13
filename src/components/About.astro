@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import Sheet from './Sheet.astro';
 import SectionHead from './SectionHead.astro';
 import portrait from '../assets/portrait.svg';
 import { about, sections } from '../data/copy';
@@ -21,14 +21,8 @@ const credentials = site.credentials.map((c) =>
     />
     <div class="mt-12 grid items-start gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-16" data-reveal>
       <div class="reveal-self lg:col-span-5">
-        <figure class="reveal-img aspect-[4/5] overflow-hidden rounded-md bg-ink-900">
-          <Image
-            src={portrait}
-            alt={about.portraitAlt}
-            class="work-img size-full object-cover"
-            layout="none"
-            loading="lazy"
-          />
+        <figure class="sheet-frame aspect-[4/5] overflow-hidden rounded-md bg-ink-900">
+          <Sheet src={portrait} class="work-img size-full" decorative={false} label={about.portraitAlt} />
         </figure>
       </div>
       <div class="lg:col-span-6 lg:col-start-7">

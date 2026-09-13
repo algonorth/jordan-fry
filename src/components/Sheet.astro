@@ -1,0 +1,23 @@
+---
+/**
+ * A drawing sheet inlined as SVG so it can draft itself when its `data-reveal` group enters (see
+ * `.sheet` in global.css). Astro renders an imported SVG as a component; the sheet's ids are
+ * namespaced by the generator so any number can share a page. Decorative by default: the caption
+ * or button around it carries the name.
+ */
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  class?: string;
+  /** `false` keeps the sheet's own `role="img"` and accessible name (or the `label` given here). */
+  decorative?: boolean;
+  label?: string;
+}
+const { src, class: className, decorative = true, label } = Astro.props;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Svg = src as any;
+const a11y = decorative ? { 'aria-hidden': 'true' } : label ? { 'aria-label': label } : {};
+---
+
+<Svg class:list={['sheet block h-auto w-full', className]} {...a11y} />

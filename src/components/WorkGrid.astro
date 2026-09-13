@@ -4,14 +4,13 @@ import WorkCard from './WorkCard.astro';
 
 interface Props {
   entries: CollectionEntry<'work'>[];
-  /** Skip the reveal on the first card so it can peek in below the hero. */
-  peekFirst?: boolean;
 }
-const { entries, peekFirst = false } = Astro.props;
+const { entries } = Astro.props;
 
 /**
  * Asymmetric editorial rhythm by index; two columns on tablets, one on phones. The drawing sheets
  * are generated at exactly these aspects (scripts/make-drawings.mjs) so no cover is ever cropped.
+ * Every card reveals (and drafts itself) when it enters, the first one included.
  */
 const pattern = [
   { span: 'lg:col-span-7', aspect: 'aspect-[4/3]', offset: '' },
@@ -24,12 +23,14 @@ const pattern = [
 ---
 
 <ul class="grid grid-cols-1 gap-x-6 gap-y-14 md:grid-cols-2 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-16">
-  {entries.map((entry, i) => {
-    const p = pattern[i % pattern.length]!;
-    return (
-      <li class:list={[p.span, p.offset, 'md:self-end']} data-reveal={peekFirst && i === 0 ? undefined : ''}>
-        <WorkCard entry={entry} aspect={p.aspect} index={i} />
-      </li>
-    );
-  })}
+  {
+    entries.map((entry, i) => {
+      const p = pattern[i % pattern.length]!;
+      return (
+        <li class:list={[p.span, p.offset, 'md:self-end']} data-reveal>
+          <WorkCard entry={entry} aspect={p.aspect} index={i} />
+        </li>
+      );
+    })
+  }
 </ul>

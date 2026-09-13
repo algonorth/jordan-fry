@@ -7,8 +7,10 @@ if (groups.length) {
       (child as HTMLElement).style.setProperty('--i', String(i)),
     );
   }
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce || !('IntersectionObserver' in window)) {
+  // The OS reduced-motion flag is not consulted (Windows sets it whenever "Show animations" is
+  // off; see the hero); `?motion=static` marks <html data-motion="static"> before first paint.
+  const isStatic = document.documentElement.dataset.motion === 'static';
+  if (isStatic || !('IntersectionObserver' in window)) {
     groups.forEach((g) => g.classList.add('is-in'));
   } else {
     const io = new IntersectionObserver(

@@ -27,6 +27,8 @@ const { title, description, ogType, ogImage, noindex, jsonLd = [] } = Astro.prop
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       document.documentElement.classList.add('js');
+      if (/[?&]motion=static(?:&|$)/.test(location.search))
+        document.documentElement.dataset.motion = 'static';
     </script>
     <Seo {title} {description} {ogType} {ogImage} {noindex} />
     <Font cssVariable="--font-fraunces" preload />

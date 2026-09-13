@@ -4,6 +4,7 @@ import Base from '../../layouts/Base.astro';
 import WorkImage from '../../components/WorkImage.astro';
 import Lightbox from '../../components/Lightbox.astro';
 import ProjectMeta from '../../components/ProjectMeta.astro';
+import Sheet from '../../components/Sheet.astro';
 import { meta, work, nav } from '../../data/copy';
 import { withBase } from '../../lib/url';
 
@@ -96,16 +97,26 @@ const meta3 = [
             >
               <button
                 type="button"
-                class="reveal-self reveal-img group focus-ring block w-full overflow-hidden rounded-md bg-ink-900"
+                class:list={[
+                  'group focus-ring block w-full overflow-hidden rounded-md bg-ink-900',
+                  entry.data.placeholder && g.src.format === 'svg' ? 'sheet-frame' : 'reveal-self reveal-img',
+                ]}
                 data-lightbox-open={i}
                 aria-label={work.openPhoto(i + 1, gallery.length)}
               >
-                <WorkImage
-                  src={g.src}
-                  alt={describe(g.alt)}
-                  sizes="(min-width: 64rem) 50vw, 100vw"
-                  class="work-img block w-full group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
-                />
+                {entry.data.placeholder && g.src.format === 'svg' ? (
+                  <Sheet
+                    src={g.src}
+                    class="work-img group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
+                  />
+                ) : (
+                  <WorkImage
+                    src={g.src}
+                    alt={describe(g.alt)}
+                    sizes="(min-width: 64rem) 50vw, 100vw"
+                    class="work-img block w-full group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
+                  />
+                )}
               </button>
             </li>
           ))}
