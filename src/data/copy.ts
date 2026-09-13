@@ -11,6 +11,19 @@ export const hero = {
   ctaMobile: 'Call Jordan',
   ctaDesktop: 'Start a conversation',
   secondary: 'See the work',
+  /** The at-a-glance column beside the headline on large screens. */
+  glanceLabel: 'At a glance',
+  since: (year: number) => `Est. ${year}`,
+  licensed: 'Licensed & insured',
+};
+
+/** Section indices and labels, in page order. */
+export const sections = {
+  work: { index: '01', label: 'Selected work' },
+  services: { index: '02', label: 'Services' },
+  about: { index: '03', label: 'About' },
+  testimonials: { index: '04', label: 'Kind words' },
+  contact: { index: '05', label: 'Contact' },
 };
 
 export const nav = {
@@ -24,6 +37,7 @@ export const work = {
   heading: 'Selected work',
   indexHeading: 'Work',
   indexLead: 'Decks, built-ins, stairs, porches and remodels around Westmoreland County.', // TODO: area
+  count: (n: number, from: number, to: number) => `${n} projects · ${from}–${to}`,
   next: 'Next',
   previous: 'Previous',
   location: 'Location',
@@ -36,15 +50,18 @@ export const work = {
 
 export const services = {
   heading: 'What I do',
+  example: 'Example',
 };
 
 export const about = {
   heading: 'About Jordan',
   paragraphs: [
-    'I got my start in the carpentry program at TODO: Vo-Tech name, where I learned to frame square, cut clean and finish work that holds up. I have been working with my hands ever since, first on crews building and remodeling homes around Westmoreland County, and now on my own, one job at a time.',
+    // TODO: name the Vo-Tech program once confirmed ("the carpentry program at <school>")
+    'I got my start in a vo-tech carpentry program, where I learned to frame square, cut clean and finish work that holds up. I have been working with my hands ever since, first on crews building and remodeling homes around Westmoreland County, and now on my own, one job at a time.',
     'Most of what I do is the work you live with every day: the trim you run your hand along, the stairs you climb, the deck you sit on in July. I keep the crew small, I do the work myself, and I would rather do fewer jobs well than a lot of them fast.',
   ],
-  portraitAlt: 'Jordan Fry in his shop, standing beside a workbench', // TODO: real portrait
+  portraitAlt:
+    'Drawing of the workbench and tool wall in Jordan’s shop: a hand plane, four chisels, a framing square and a mallet', // TODO: real portrait
 };
 
 export const testimonials = {
@@ -69,7 +86,9 @@ export const process = [
 export const contact = {
   heading: 'Let’s talk about your project',
   lead: 'The easiest way to reach me is a call or a text. If it is easier to write it down, use the form and I will get back to you within a business day.',
-  links: { call: 'Call', text: 'Text', email: 'Email' },
+  leadNoForm:
+    'The easiest way to reach me is a call or a text. If it is easier to write it down, send an email and I will get back to you within a business day.',
+  links: { call: 'Call', text: 'Text', email: 'Email', hours: 'Hours' },
   form: {
     name: 'Your name',
     reach: 'Phone or email',
@@ -98,7 +117,10 @@ export const callBar = {
 
 export const footer = {
   line: 'Jordan Fry, carpenter and contractor. Serving Westmoreland County and the greater Pittsburgh area.', // TODO: area
-  legal: 'Licensed and insured · PA HIC #TODO',
+  legal: 'Licensed and insured',
+  /** Appended to `legal` once `site.hic` holds the real registration number. */
+  hic: (n: string) => `PA HIC #${n}`,
+  backToTop: 'Back to top',
 };
 
 export const meta = {

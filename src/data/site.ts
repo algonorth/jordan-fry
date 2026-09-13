@@ -24,12 +24,32 @@ export const site = {
   school: 'TODO: Vo-Tech name', // TODO: the Vo-Tech school
   credentials: [
     'Vo-Tech carpentry graduate',
-    'Licensed and insured · PA HIC #TODO',
+    'Licensed and insured',
     'Serving Westmoreland County', // TODO: area
   ],
   social: { instagram: '', facebook: '', google: '' }, // '' hides the entry
   founded: 2018, // TODO
 } as const;
+
+const short = (d: string) => d.slice(0, 3);
+const clock = (t: string) => {
+  const [h, m] = t.split(':').map(Number) as [number, number];
+  const hour = ((h + 11) % 12) + 1;
+  return `${hour}${m ? ':' + String(m).padStart(2, '0') : ''}${h < 12 ? 'am' : 'pm'}`;
+};
+/** "Mon–Fri 7am–6pm · Sat 8am–2pm", derived from `site.hours`. */
+export const hoursDisplay = site.hours
+  .map((h) => {
+    const days =
+      h.days.length > 1 ? `${short(h.days[0]!)}–${short(h.days[h.days.length - 1]!)}` : short(h.days[0]!);
+    return `${days} ${clock(h.opens)}–${clock(h.closes)}`;
+  })
+  .join(' · ');
+
+/** True once the Vo-Tech school is named (until then structured data leaves it out). */
+export const hasSchool = !site.school.startsWith('TODO');
+/** True once the PA HIC registration number is real (the placeholder is all zeros). */
+export const hasHic = !/^[A-Z]*0+$/.test(site.hic);
 
 export const telHref = `tel:${site.phone.e164}`;
 export const smsHref = `sms:${site.sms.e164}`;

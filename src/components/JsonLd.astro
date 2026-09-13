@@ -1,5 +1,5 @@
 ---
-import { site } from '../data/site';
+import { site, hasHic, hasSchool } from '../data/site';
 import { services } from '../data/services';
 import { meta } from '../data/copy';
 import { withBase } from '../lib/url';
@@ -22,11 +22,13 @@ const business: Record<string, unknown> = {
   email: site.email,
   image: `${root}og.png`,
   priceRange: '$$',
-  identifier: {
-    '@type': 'PropertyValue',
-    propertyID: 'PA Home Improvement Contractor Registration',
-    value: site.hic,
-  },
+  ...(hasHic && {
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'PA Home Improvement Contractor Registration',
+      value: site.hic,
+    },
+  }),
   address: {
     '@type': 'PostalAddress',
     addressLocality: site.address.locality,
@@ -57,7 +59,7 @@ const business: Record<string, unknown> = {
     '@type': 'Person',
     name: site.name,
     jobTitle: 'Carpenter',
-    alumniOf: { '@type': 'EducationalOrganization', name: site.school },
+    ...(hasSchool && { alumniOf: { '@type': 'EducationalOrganization', name: site.school } }),
   },
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

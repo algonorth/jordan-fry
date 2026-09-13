@@ -4,6 +4,8 @@ const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
 if (dialog) {
   const slides = Array.from(dialog.querySelectorAll<HTMLElement>('[data-slide]'));
   const status = dialog.querySelector<HTMLElement>('#lightbox-status')!;
+  const count = dialog.querySelector<HTMLElement>('#lightbox-count');
+  const caption = dialog.querySelector<HTMLElement>('#lightbox-caption');
   const total = slides.length;
   let index = 0;
   let opener: HTMLElement | null = null;
@@ -13,6 +15,8 @@ if (dialog) {
     slides.forEach((s, j) => (s.hidden = j !== index));
     const alt = slides[index]?.querySelector('img')?.alt ?? '';
     status.textContent = `Photo ${index + 1} of ${total}, ${alt}`;
+    if (count) count.textContent = `${index + 1} / ${total}`;
+    if (caption) caption.textContent = alt;
   };
 
   for (const el of document.querySelectorAll<HTMLElement>('[data-lightbox-open]')) {

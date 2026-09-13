@@ -6,36 +6,38 @@ import { withBase } from '../lib/url';
 interface Props {
   entry: CollectionEntry<'work'>;
   aspect: string;
+  index: number;
   sizes?: string;
 }
-const { entry, aspect, sizes = '(min-width: 64rem) 50vw, 100vw' } = Astro.props;
-const { title, type, location, cover, placeholder } = entry.data;
+const { entry, aspect, index, sizes = '(min-width: 64rem) 50vw, 100vw' } = Astro.props;
+const { title, type, location, year, cover, placeholder } = entry.data;
 const town = location.split(',')[0];
 ---
 
-<a href={withBase(`/work/${entry.id}/`)} class="group focus-ring block rounded-md">
+<a href={withBase(`/work/${entry.id}/`)} class="reveal-self group focus-ring block rounded-md">
   <figure
-    class:list={['relative overflow-hidden rounded-md bg-ink-800', aspect]}
+    class:list={['reveal-img relative overflow-hidden rounded-md bg-ink-900', aspect]}
     style={`view-transition-name: cover-${entry.id}`}
   >
     <WorkImage
       src={cover}
       alt=""
       sizes={sizes}
-      class="size-full object-cover transition-[transform,filter] duration-(--duration-slow) ease-out-soft group-hover:scale-[1.03] group-hover:brightness-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+      class="work-img size-full object-cover group-hover:scale-[1.03] group-hover:brightness-[1.06] motion-reduce:group-hover:scale-100"
     />
-    <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/85 to-transparent p-6 opacity-0 transition-opacity duration-(--duration-base) group-hover:opacity-100 group-focus-visible:opacity-100 md:p-8 touch:hidden">
-      <span class="block font-display text-h3 text-fg">{title}</span>
-      <span class="mt-1 block text-label uppercase text-oak-300">{`${type} · ${town}`}</span>
-    </figcaption>
     {import.meta.env.DEV && placeholder && (
       <span class="absolute top-3 right-3 rounded-sm bg-ink-950/70 px-2 py-1 text-xs text-fg-3">
         TODO photo
       </span>
     )}
   </figure>
-  <span class="mt-3 hidden text-sm text-fg-2 touch:block">
-    <span class="text-fg">{title}</span>
-    {` · ${type} · ${town}`}
-  </span>
+  <div class="card-meta mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+    <span class="flex min-w-0 items-baseline gap-4">
+      <span class="text-label text-oak-300 tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+      <span class="font-display text-h3 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
+        {title}
+      </span>
+    </span>
+    <span class="text-label uppercase text-fg-3 tabular-nums">{`${type} · ${town} · ${year}`}</span>
+  </div>
 </a>

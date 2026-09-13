@@ -1,34 +1,45 @@
 ---
 import { Image } from 'astro:assets';
+import SectionHead from './SectionHead.astro';
 import portrait from '../assets/portrait.svg';
-import { about } from '../data/copy';
-import { site } from '../data/site';
+import { about, sections } from '../data/copy';
+import { site, hasHic } from '../data/site';
+import { footer } from '../data/copy';
+
+const credentials = site.credentials.map((c) =>
+  c === footer.legal && hasHic ? `${c} · ${footer.hic(site.hic)}` : c,
+);
 ---
 
 <section id="about" aria-labelledby="about-h" class="scroll-mt-20 py-section">
-  <div class="container-site grid items-start gap-10 lg:grid-cols-12 lg:gap-16" data-reveal>
-    <figure class="aspect-[4/5] overflow-hidden rounded-md bg-ink-800 lg:col-span-5">
-      <Image
-        src={portrait}
-        alt={about.portraitAlt}
-        class="size-full object-cover"
-        layout="none"
-        loading="lazy"
-      />
-    </figure>
-    <div class="lg:col-span-6 lg:col-start-7">
-      <h2 id="about-h" class="font-display text-h2 text-fg">
-        {about.heading}
-      </h2>
-      <div class="mt-6 space-y-6">
-        <p class="text-lead text-fg">{about.paragraphs[0]}</p>
-        <p class="text-body text-fg-2">{about.paragraphs[1]}</p>
+  <div class="container-site">
+    <SectionHead
+      index={sections.about.index}
+      label={sections.about.label}
+      title={about.heading}
+      id="about-h"
+    />
+    <div class="mt-12 grid items-start gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-16" data-reveal>
+      <div class="reveal-self lg:col-span-5">
+        <figure class="reveal-img aspect-[4/5] overflow-hidden rounded-md bg-ink-900">
+          <Image
+            src={portrait}
+            alt={about.portraitAlt}
+            class="work-img size-full object-cover"
+            layout="none"
+            loading="lazy"
+          />
+        </figure>
       </div>
-      <ul class="mt-10 flex flex-wrap gap-x-10 gap-y-3 border-t border-line pt-8 text-label uppercase text-fg-3">
-        {site.credentials.map((c) => (
-          <li>{c}</li>
-        ))}
-      </ul>
+      <div class="lg:col-span-6 lg:col-start-7">
+        <p class="text-lead text-fg">{about.paragraphs[0]}</p>
+        <p class="mt-6 text-body text-fg-2">{about.paragraphs[1]}</p>
+        <ul class="mt-10 flex flex-wrap gap-x-10 gap-y-3 border-t border-line pt-8 text-label uppercase text-fg-3">
+          {credentials.map((c) => (
+            <li>{c}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   </div>
 </section>

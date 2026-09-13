@@ -8,7 +8,8 @@ import Services from '../components/Services.astro';
 import About from '../components/About.astro';
 import Testimonials from '../components/Testimonials.astro';
 import Contact from '../components/Contact.astro';
-import { meta, work, nav } from '../data/copy';
+import SectionHead from '../components/SectionHead.astro';
+import { meta, work, nav, sections } from '../data/copy';
 import { withBase } from '../lib/url';
 
 const featured = (await getCollection('work', ({ data }) => data.featured)).sort(
@@ -19,12 +20,12 @@ const featured = (await getCollection('work', ({ data }) => data.featured)).sort
 <Base title={meta.home.title} description={meta.home.description}>
   <HeroCanvas slot="backdrop" />
   <Hero />
-  <section id="work" aria-labelledby="work-h" class="scroll-mt-20 pt-6 pb-section md:pt-10">
+  <section id="work" aria-labelledby="work-h" class="scroll-mt-20 pt-4 pb-section md:pt-6">
     <div class="container-wide">
-      <h2 id="work-h" class="sr-only">
-        {work.heading}
-      </h2>
-      <WorkGrid entries={featured} peekFirst />
+      <SectionHead index={sections.work.index} label={work.heading} id="work-h" static />
+      <div class="mt-10 lg:mt-14">
+        <WorkGrid entries={featured} peekFirst />
+      </div>
       <div class="mt-12 flex justify-end lg:mt-16">
         <a href={withBase('/work/')} class="link-quiet focus-ring rounded-sm">
           {nav.allWork}

@@ -1,8 +1,9 @@
 ---
 import { PUBLIC_WEB3FORMS_KEY } from 'astro:env/client';
+import SectionHead from './SectionHead.astro';
 import ContactForm from './ContactForm.astro';
-import { contact, process } from '../data/copy';
-import { site, telHref, smsHref, mailHref } from '../data/site';
+import { contact, process, sections } from '../data/copy';
+import { site, hoursDisplay, telHref, smsHref, mailHref } from '../data/site';
 
 const hasForm = Boolean(PUBLIC_WEB3FORMS_KEY);
 const rows = [
@@ -10,45 +11,67 @@ const rows = [
   { label: contact.links.text, href: smsHref, text: site.phone.display, cls: 'md:hidden' },
   { label: contact.links.email, href: mailHref, text: site.email, cls: '' },
 ];
+const linkCls =
+  'focus-ring rounded-sm text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300';
 ---
 
 <section id="contact" aria-labelledby="contact-h" class="scroll-mt-20 py-section">
   <div class="container-site">
-    <div class:list={[hasForm ? 'grid gap-12 lg:grid-cols-12 lg:gap-16' : 'max-w-2xl']}>
-      <div class:list={[hasForm && 'lg:col-span-5']} data-reveal>
-        <h2 id="contact-h" class="font-display text-h2 text-fg">
-          {contact.heading}
-        </h2>
-        <p class="mt-6 text-lead text-fg-2">{contact.lead}</p>
+    <SectionHead
+      index={sections.contact.index}
+      label={sections.contact.label}
+      title={contact.heading}
+      id="contact-h"
+    />
+    <div class="mt-12 grid gap-12 lg:mt-16 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-5" data-reveal>
+        <p class="text-lead text-fg-2">{hasForm ? contact.lead : contact.leadNoForm}</p>
         <dl class="mt-10 text-body" data-primary-cta>
           {rows.map((r) => (
             <div class:list={['flex items-baseline gap-6 py-2', r.cls]}>
               <dt class="w-14 shrink-0 text-label uppercase text-fg-3">{r.label}</dt>
               <dd>
-                <a
-                  href={r.href}
-                  class="focus-ring rounded-sm text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300"
-                >
+                <a href={r.href} class={linkCls}>
                   {r.text}
                 </a>
               </dd>
             </div>
           ))}
+          <div class="flex items-baseline gap-6 py-2">
+            <dt class="w-14 shrink-0 text-label uppercase text-fg-3">{contact.links.hours}</dt>
+            <dd class="text-fg-2 tabular-nums">{hoursDisplay}</dd>
+          </div>
         </dl>
-        <ol class="mt-12 grid gap-6 border-t border-line pt-8">
-          {process.map((step) => (
-            <li>
-              <span class="block text-label uppercase text-oak-300">{step.title}</span>
-              <p class="mt-1 max-w-md text-sm text-fg-2">{step.text}</p>
-            </li>
-          ))}
-        </ol>
+        {hasForm && (
+          <ol class="mt-12 grid gap-6 border-t border-line pt-8">
+            {process.map((step) => (
+              <li>
+                <span class="block text-label uppercase text-oak-300">{step.title}</span>
+                <p class="mt-1 max-w-md text-sm text-fg-2">{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
-      {hasForm && (
-        <div class="lg:col-span-6 lg:col-start-7" data-reveal>
+      <div class="lg:col-span-6 lg:col-start-7" data-reveal>
+        {hasForm ? (
           <ContactForm />
-        </div>
-      )}
+        ) : (
+          <ol class="grid gap-8 border-t border-line pt-8 lg:pt-10">
+            {process.map((step, i) => (
+              <li class="grid grid-cols-[2rem_1fr] gap-x-6 md:grid-cols-[3rem_1fr]">
+                <span class="pt-1 text-label text-oak-300 tabular-nums">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <span class="block font-display text-h3 text-fg">{step.title}</span>
+                  <p class="mt-2 max-w-md text-body text-fg-2">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </div>
   </div>
 </section>

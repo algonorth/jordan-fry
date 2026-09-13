@@ -44,6 +44,7 @@ const { title, description, ogType, ogImage, noindex, jsonLd = [] } = Astro.prop
       {skipLink}
     </a>
     <slot name="backdrop" />
+    <div class="grain" aria-hidden="true"></div>
     <Header />
     <main id="main" tabindex="-1" class="relative z-10 outline-none">
       <slot />

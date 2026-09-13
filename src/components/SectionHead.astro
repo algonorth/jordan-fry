@@ -1,0 +1,39 @@
+---
+/**
+ * Every section opens the same way: a hairline that draws in, an index and a label in small caps,
+ * and (optionally) the display heading. Without `title` the label is the section's heading.
+ */
+interface Props {
+  index: string;
+  label: string;
+  title?: string;
+  id: string;
+  /** Render without the reveal choreography (the first head peeks in below the hero). */
+  static?: boolean;
+}
+const { index, label, title, id, static: isStatic = false } = Astro.props;
+const eyebrow = 'flex items-baseline gap-4 text-label uppercase text-fg-3';
+---
+
+<div data-reveal={isStatic ? undefined : ''}>
+  <div class="rule" aria-hidden="true"></div>
+  <div class="mt-5 flex items-baseline justify-between gap-6">
+    {title ? (
+      <p class={eyebrow}>
+        <span class="text-oak-300 tabular-nums">{index}</span>
+        {label}
+      </p>
+    ) : (
+      <h2 id={id} class={eyebrow}>
+        <span class="text-oak-300 tabular-nums">{index}</span>
+        {label}
+      </h2>
+    )}
+    <slot name="aside" />
+  </div>
+  {title && (
+    <h2 id={id} class="mt-8 max-w-3xl font-display text-h2 text-fg md:mt-10">
+      {title}
+    </h2>
+  )}
+</div>

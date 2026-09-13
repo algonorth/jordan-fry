@@ -1,35 +1,47 @@
 ---
 import { hero } from '../data/copy';
-import { telHref } from '../data/site';
+import { site, telHref } from '../data/site';
+
+const glance = [site.address.locality + ', ' + site.address.region, hero.since(site.founded), hero.licensed];
 ---
 
 <section
   id="hero"
   data-hero
   aria-labelledby="hero-name"
-  class="relative flex min-h-[92svh] flex-col justify-end pb-16 md:pb-24"
+  class="relative flex min-h-[88svh] flex-col justify-end pb-16 md:pb-24"
 >
-  <div class="container-site">
-    <h1
-      id="hero-name"
-      class="hero-name font-display text-display font-[350] text-fg"
-      style="font-variation-settings: 'opsz' 144"
-    >
-      <span class="block">Jordan</span>
-      <span class="block">Fry</span>
-    </h1>
-    <p class="mt-6 max-w-xl text-lead text-pretty text-fg-2">{hero.line}</p>
-    <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4" data-primary-cta>
-      <a href={telHref} class="btn-primary focus-ring md:hidden">
-        {hero.ctaMobile}
-      </a>
-      <a href="#contact" class="btn-primary focus-ring hidden md:inline-flex">
-        {hero.ctaDesktop}
-      </a>
-      <a href="#work" class="link-quiet focus-ring rounded-sm">
-        {hero.secondary}
-      </a>
+  <div class="container-site lg:grid lg:grid-cols-12 lg:items-end lg:gap-10">
+    <div class="lg:col-span-9">
+      <h1
+        id="hero-name"
+        class="hero-name font-display text-display font-[350] text-fg"
+        style="font-variation-settings: 'opsz' 144"
+      >
+        <span class="block">Jordan</span>
+        <span class="block">Fry</span>
+      </h1>
+      <p class="mt-8 max-w-xl text-lead text-pretty text-fg-2">{hero.line}</p>
+      <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4" data-primary-cta>
+        <a href={telHref} class="btn-primary focus-ring md:hidden">
+          {hero.ctaMobile}
+        </a>
+        <a href="#contact" class="btn-primary focus-ring hidden md:inline-flex">
+          {hero.ctaDesktop}
+        </a>
+        <a href="#work" class="link-quiet focus-ring rounded-sm">
+          {hero.secondary}
+        </a>
+      </div>
     </div>
+    <ul
+      aria-label={hero.glanceLabel}
+      class="hidden text-right text-label uppercase text-fg-3 lg:col-span-3 lg:block lg:space-y-3 lg:justify-self-end"
+    >
+      {glance.map((g) => (
+        <li class="tabular-nums">{g}</li>
+      ))}
+    </ul>
   </div>
 </section>
 

@@ -36,7 +36,7 @@ const btn =
       <path d="M6 6l12 12M18 6L6 18"></path>
     </svg>
   </button>
-  <ul class="pointer-events-none flex h-full w-full items-center justify-center p-4 md:p-14">
+  <ul class="pointer-events-none flex h-full w-full items-center justify-center p-4 pb-20 md:p-14 md:pb-24">
     {photos.map((p, i) => (
       <li class="contents" data-slide={i} hidden>
         <Image
@@ -55,6 +55,13 @@ const btn =
     id="lightbox-status"
     data-template={work.photoOf(0, photos.length)}
   ></p>
+  <div
+    class="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-16 pb-5 text-center"
+    aria-hidden="true"
+  >
+    <span id="lightbox-count" class="text-label uppercase text-oak-300 tabular-nums"></span>
+    <span id="lightbox-caption" class="max-w-xl text-sm text-fg-2"></span>
+  </div>
   {photos.length > 1 && (
     <>
       <button

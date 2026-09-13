@@ -1,40 +1,65 @@
 ---
-import { site, telHref, mailHref } from '../data/site';
-import { footer } from '../data/copy';
+import { site, hoursDisplay, hasHic, telHref, mailHref } from '../data/site';
+import { footer, contact } from '../data/copy';
 import { withBase } from '../lib/url';
 
 const year = new Date().getFullYear();
+const linkCls =
+  'focus-ring rounded-sm text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300';
 ---
 
-<footer class="border-t border-line py-12 lg:py-16">
-  <div class="container-site">
-    <div class="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+<footer class="relative overflow-hidden border-t border-line">
+  <div class="footer-glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
+  <div class="container-site relative py-16 lg:py-24">
+    <div class="flex flex-col gap-12 md:flex-row md:items-end md:justify-between md:gap-16">
       <div>
-        <a href={withBase('/')} class="focus-ring rounded-sm font-display text-xl tracking-tight text-fg">
+        <a
+          href={withBase('/')}
+          class="focus-ring inline-block rounded-sm font-display text-h1 font-[350] tracking-tight text-fg"
+          style="font-variation-settings: 'opsz' 144"
+        >
           {site.name}
         </a>
-        <p class="mt-3 max-w-md text-sm text-fg-2">{footer.line}</p>
+        <p class="mt-5 max-w-md text-sm text-fg-2">{footer.line}</p>
       </div>
-      <div class="flex flex-col text-sm">
-        <a
-          href={telHref}
-          class="focus-ring rounded-sm py-2 text-fg tabular-nums transition-colors duration-(--duration-fast) hover:text-amber-300"
-        >
-          {site.phone.display}
-        </a>
-        <a
-          href={mailHref}
-          class="focus-ring rounded-sm py-2 text-fg transition-colors duration-(--duration-fast) hover:text-amber-300"
-        >
-          {site.email}
-        </a>
-      </div>
+      <dl class="grid shrink-0 gap-x-12 gap-y-3 text-sm sm:grid-cols-[auto_auto] md:text-right">
+        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.call}</dt>
+        <dd>
+          <a href={telHref} class={linkCls}>
+            {site.phone.display}
+          </a>
+        </dd>
+        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.email}</dt>
+        <dd>
+          <a href={mailHref} class={linkCls}>
+            {site.email}
+          </a>
+        </dd>
+        <dt class="text-label uppercase text-fg-3 sm:pt-0.5">{contact.links.hours}</dt>
+        <dd class="text-fg-2 tabular-nums">{hoursDisplay}</dd>
+      </dl>
     </div>
-    <div class="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-xs text-fg-3">
-      <span>
-        © {year} {site.name}
-      </span>
-      <span>{footer.legal}</span>
+    <div class="mt-14 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-line pt-6 text-xs text-fg-3">
+      <p class="flex flex-wrap gap-x-6 gap-y-1">
+        <span>
+          © {year} {site.name}
+        </span>
+        <span>{footer.legal}</span>
+        {hasHic && <span>{footer.hic(site.hic)}</span>}
+      </p>
+      <a href="#top" class="link-quiet focus-ring rounded-sm text-xs">
+        {footer.backToTop}
+      </a>
     </div>
   </div>
 </footer>
+
+<style>
+  .footer-glow {
+    background: radial-gradient(
+      55% 70% at 8% 110%,
+      color-mix(in oklab, var(--color-amber-400) 12%, transparent),
+      transparent 70%
+    );
+  }
+</style>

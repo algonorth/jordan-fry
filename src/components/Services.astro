@@ -1,27 +1,63 @@
 ---
+import { getCollection } from 'astro:content';
+import SectionHead from './SectionHead.astro';
+import WorkImage from './WorkImage.astro';
 import { services } from '../data/services';
-import { services as copy } from '../data/copy';
+import { services as copy, sections } from '../data/copy';
+import { withBase } from '../lib/url';
+
+const work = await getCollection('work');
+const example = (id: string) => work.find((e) => e.id === id);
 ---
 
 <section id="services" aria-labelledby="services-h" class="scroll-mt-20 py-section">
-  <div class="container-site" data-reveal>
-    <h2 id="services-h" class="font-display text-h2 text-fg">
-      {copy.heading}
-    </h2>
-    <ul class="mt-12 border-t border-line">
+  <div class="container-site">
+    <SectionHead
+      index={sections.services.index}
+      label={sections.services.label}
+      title={copy.heading}
+      id="services-h"
+    />
+    <ul class="mt-12 border-t border-line lg:mt-16" data-reveal>
       {services.map((s, i) => (
         <li>
           <details class="disclosure group border-b border-line">
             <summary class="focus-ring flex cursor-pointer list-none items-baseline gap-6 py-6 [&::-webkit-details-marker]:hidden md:gap-10 md:py-8">
-              <span class="w-8 shrink-0 text-label uppercase text-fg-3 tabular-nums">
+              <span class="w-8 shrink-0 text-label text-oak-300 tabular-nums">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <span class="font-display text-h2 text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
+              <span class="font-display text-row text-fg transition-colors duration-(--duration-fast) group-hover:text-amber-300">
                 {s.name}
               </span>
               <span class="plus ms-auto self-center text-fg-2" aria-hidden="true" />
             </summary>
-            <p class="max-w-2xl pb-8 ps-14 text-body text-fg-2 md:ps-18">{s.text}</p>
+            <div class="grid gap-8 pb-10 ps-14 md:grid-cols-[1fr_auto] md:gap-12 md:ps-18">
+              <p class="max-w-xl text-body text-fg-2">{s.text}</p>
+              {(() => {
+                const ex = example(s.example);
+                return (
+                  ex && (
+                    <a
+                      href={withBase(`/work/${ex.id}/`)}
+                      class="group/ex focus-ring block w-full rounded-md md:w-64"
+                    >
+                      <figure class="aspect-[4/3] overflow-hidden rounded-md bg-ink-900">
+                        <WorkImage
+                          src={ex.data.cover}
+                          alt=""
+                          sizes="(min-width: 48rem) 16rem, 100vw"
+                          class="work-img size-full object-cover group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
+                        />
+                      </figure>
+                      <span class="mt-3 block text-label uppercase text-fg-3">{copy.example}</span>
+                      <span class="mt-1 block text-sm text-fg transition-colors duration-(--duration-fast) group-hover/ex:text-amber-300">
+                        {ex.data.title}
+                      </span>
+                    </a>
+                  )
+                );
+              })()}
+            </div>
           </details>
         </li>
       ))}

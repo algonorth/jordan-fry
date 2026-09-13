@@ -8,21 +8,31 @@ const links = [
   { href: withBase('/#services'), label: nav.services },
   { href: withBase('/#about'), label: nav.about },
 ];
+const path = Astro.url.pathname;
 ---
 
 <header
   id="site-header"
   class="sticky top-0 z-30 border-b border-transparent transition-colors duration-(--duration-base) [&.is-scrolled]:border-line [&.is-scrolled]:bg-ink-950/80 [&.is-scrolled]:backdrop-blur-md"
 >
-  <div class="container-site flex h-16 items-center justify-between">
-    <a href={withBase('/')} class="focus-ring rounded-sm font-display text-xl tracking-tight text-fg">
+  <div id="top" class="container-site flex h-16 items-center justify-between">
+    <a
+      href={withBase('/')}
+      class="focus-ring rounded-sm font-display text-[1.375rem] tracking-tight text-fg"
+      style="font-variation-settings: 'opsz' 32"
+    >
       {site.name}
     </a>
     <nav aria-label="Primary" class="flex items-center gap-6 md:gap-8">
       {links.map((l) => (
         <a
           href={l.href}
-          class="focus-ring rounded-sm py-3 text-sm text-fg-2 transition-colors duration-(--duration-fast) hover:text-fg"
+          class="link-nav focus-ring rounded-sm py-3 text-sm"
+          aria-current={
+            l.href !== withBase('/') && path.startsWith(l.href.split('#')[0]!) && !l.href.includes('#')
+              ? 'page'
+              : undefined
+          }
         >
           {l.label}
         </a>

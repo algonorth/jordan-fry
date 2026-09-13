@@ -8,21 +8,22 @@ npm run build      # type check + static build into dist/
 npm run preview    # serve dist/
 npm test           # Playwright smoke tests against dist/ (run `npm run build` first)
 npm run format     # Prettier
-npm run placeholders   # regenerate the wood-grain placeholder images
+npm run placeholders   # regenerate the shop-drawing placeholder sheets
 npm run og         # regenerate public/og.png with the real fonts
 ```
 
 ## Where things live
 
-| What                                                                 | Where                                                                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Business facts (phone, email, area, hours, HIC number)               | `src/data/site.ts`                                                                               |
-| Copy (hero line, about, process, contact, form, footer, page titles) | `src/data/copy.ts`                                                                               |
-| Services and testimonials                                            | `src/data/services.ts`, `src/data/testimonials.ts`                                               |
-| Projects                                                             | `src/content/work/<slug>/index.md` with its photos beside it                                     |
-| Portrait                                                             | `src/assets/portrait.svg` (replace with a 1200×1500 JPEG and update the import in `About.astro`) |
-| Design tokens and recipes                                            | `DESIGN.md`, `src/styles/global.css`                                                             |
-| Particle hero                                                        | `src/lib/hero/` (loaded lazily by `HeroCanvas.astro`)                                            |
+| What                                                                 | Where                                                                                                                   |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Business facts (phone, email, area, hours, HIC number)               | `src/data/site.ts`                                                                                                      |
+| Copy (hero line, about, process, contact, form, footer, page titles) | `src/data/copy.ts`                                                                                                      |
+| Services and testimonials                                            | `src/data/services.ts`, `src/data/testimonials.ts`                                                                      |
+| Projects                                                             | `src/content/work/<slug>/index.md` with its photos beside it                                                            |
+| Portrait                                                             | `src/assets/portrait.svg` (a drawing of the shop; replace with a 1200×1500 JPEG and update the import in `About.astro`) |
+| Placeholder drawings                                                 | `scripts/make-drawings.mjs` (one function per sheet, `PROJECTS` table at the bottom)                                    |
+| Design tokens and recipes                                            | `DESIGN.md`, `src/styles/global.css`                                                                                    |
+| Particle hero                                                        | `src/lib/hero/` (loaded lazily by `HeroCanvas.astro`)                                                                   |
 
 Every placeholder that needs real data contains the literal `TODO:`:
 
@@ -32,9 +33,13 @@ grep -rn "TODO" src scripts --include=*.ts --include=*.md --include=*.mjs
 
 ## Replacing placeholder photos
 
-Drop JPEGs next to each project's `index.md` (long edge 1600 for covers and galleries, 2400 if a cover
-should fill a large screen), point `cover:` / `gallery:` at them, write a real `alt`, and set
-`placeholder: false`. Responsive `srcset` variants switch on automatically for raster images.
+Until there are photographs, every project image is a generated shop drawing (plan, elevation,
+section or detail, drawn from the project's own copy) on an ink drawing sheet with a title block. See
+"Drawing sheets" in `DESIGN.md`. To replace one: drop JPEGs next to the project's `index.md` (long
+edge 1600 for covers and galleries, 2400 if a cover should fill a large screen), point `cover:` /
+`gallery:` at them, write a real `alt`, and set `placeholder: false`. Responsive `srcset` variants
+switch on automatically for raster images. Landscape covers show full-bleed and uncropped
+(`object-contain` on the ink ground); portrait covers sit beside the title.
 
 ## Contact form
 

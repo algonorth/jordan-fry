@@ -5,16 +5,19 @@ import WorkGrid from '../../components/WorkGrid.astro';
 import { meta, work } from '../../data/copy';
 
 const entries = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+const years = entries.map((e) => e.data.year);
+const count = work.count(entries.length, Math.min(...years), Math.max(...years));
 ---
 
 <Base title={meta.work.title} description={meta.work.description}>
   <section aria-labelledby="work-h" class="pt-12 pb-section md:pt-20">
     <div class="container-wide">
-      <div class="mb-12 max-w-2xl lg:mb-16">
-        <h1 id="work-h" class="font-display text-h1 text-fg">
+      <div class="mb-12 lg:mb-16" data-reveal>
+        <p class="text-label uppercase text-fg-3 tabular-nums">{count}</p>
+        <h1 id="work-h" class="mt-5 font-display text-h1 text-fg">
           {work.indexHeading}
         </h1>
-        <p class="mt-6 text-lead text-fg-2">{work.indexLead}</p>
+        <p class="mt-6 max-w-2xl text-lead text-fg-2">{work.indexLead}</p>
       </div>
       <WorkGrid entries={entries} />
     </div>

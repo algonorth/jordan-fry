@@ -34,7 +34,9 @@ test.describe('home', () => {
     await ctx.close();
   });
 
-  test('?motion=static renders the finished frame and keeps the headline at full opacity', async ({ page }) => {
+  test('?motion=static renders the finished frame and keeps the headline at full opacity', async ({
+    page,
+  }) => {
     await page.goto('/?gl=software&motion=static');
     await expect(page.locator('#hero-canvas')).toHaveClass(/(?:^|\s)is-static(?:\s|$)/, { timeout: 20_000 });
     await expect(page.locator('[data-hero]')).not.toHaveClass(/(?:^|\s)is-lit(?:\s|$)/);
@@ -59,9 +61,18 @@ test.describe('home', () => {
 
   test('sections, structured data and the services disclosure', async ({ page }) => {
     await page.goto('/');
-    for (const id of ['work', 'services', 'about', 'testimonials', 'contact']) {
-      await expect(page.locator(`#${id}`)).toBeAttached();
+    for (const [i, id] of ['work', 'services', 'about', 'testimonials', 'contact'].entries()) {
+      const section = page.locator(`#${id}`);
+      await expect(section).toBeAttached();
+      // Every section opens with its index and a hairline rule.
+      await expect(section.locator('.rule').first()).toBeAttached();
+      await expect(section.locator(`#${id}-h`)).toBeAttached();
+      await expect(section.getByText(String(i + 1).padStart(2, '0'), { exact: true }).first()).toBeAttached();
     }
+    // Work cards carry a visible caption: index, title and type · town · year.
+    const firstCard = page.locator('#work a[href*="/work/"]').first();
+    await expect(firstCard.locator('.card-meta')).toContainText(/01/);
+    await expect(firstCard.locator('.card-meta')).toContainText(/·\s*\d{4}$/);
     await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/$/);
     const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
     expect(ld['@graph'][0]['@type']).toBe('GeneralContractor');
@@ -96,9 +107,18 @@ test.describe('work', () => {
     await expect(dialog).toHaveAttribute('open', '');
     await page.keyboard.press('ArrowRight');
     await expect(page.locator('#lightbox-status')).toHaveText(/Photo 2 of/);
+    await expect(page.locator('#lightbox-count')).toHaveText(/^2 \/ \d+$/);
+    await expect(page.locator('#lightbox-caption')).not.toBeEmpty();
     await page.keyboard.press('Escape');
     await expect(dialog).not.toHaveAttribute('open', '');
     await expect(opener).toBeFocused();
+  });
+
+  test('a landscape cover is never cropped and a portrait cover sits beside the title', async ({ page }) => {
+    await page.goto('/work/cedar-deck-ligonier/');
+    await expect(page.locator('article figure img').first()).toHaveCSS('object-fit', 'contain');
+    await page.goto('/work/fireplace-built-ins-greensburg/');
+    await expect(page.locator('article figure').first()).toHaveClass(/aspect-\[3\/4\]/);
   });
 
   test('unknown routes get the 404 page', async ({ page }) => {
