@@ -129,7 +129,9 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   system.setTargets(assignTargets(set, system.count, cfg.nameFraction, SEED));
 
   const scroll = createScrollState(opts.heroEl, () => {
-    if (mode === 'live' && !asleep) start();
+    if (mode !== 'live') return;
+    if (asleep) wake();
+    else start();
   });
   const updateNameBox = () => {
     const y = mode === 'static' ? nb.docTop : nb.docTop - window.scrollY;
@@ -211,6 +213,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
   let restAt = -1;
   let asleep = false;
   const REST_AFTER = 6;
+  const REST_ALPHA = 0.55; // the settled field stays visible, only stiller and dimmer
   // Intro beats, in seconds of rendered time after the first frame: the canvas fades in over
   // 0.6s while the headline hands off to the dust; the dust drifts alone; then it flies in.
   const DRIFT_ALONE = 0.9;
@@ -250,7 +253,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
       (scroll.dissolveTarget - uniforms.uDissolve.value) * (1 - Math.exp(-dt / 0.14));
     const resting = restAt >= 0 && clock >= restAt;
     uniforms.uGlobalAlpha.value +=
-      ((resting ? 0 : 1) - uniforms.uGlobalAlpha.value) * (1 - Math.exp(-dt / 1.4));
+      ((resting ? REST_ALPHA : 1) - uniforms.uGlobalAlpha.value) * (1 - Math.exp(-dt / 1.4));
 
     pointer.update(dt);
     const ps = pointer.state;
@@ -274,9 +277,9 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
       opts.heroEl.classList.add('is-lit');
       restAt = clock + REST_AFTER;
     }
-    if (resting && uniforms.uGlobalAlpha.value < 0.004) {
-      // Fully settled: draw one clear frame and stop until something wakes the dust.
-      uniforms.uGlobalAlpha.value = 0;
+    if (resting && Math.abs(uniforms.uGlobalAlpha.value - REST_ALPHA) < 0.004) {
+      // Settled: draw one still frame and stop until a pointer or a scroll wakes the dust.
+      uniforms.uGlobalAlpha.value = REST_ALPHA;
       renderOnce();
       asleep = true;
       return;
@@ -288,7 +291,7 @@ export async function mountHero(canvas: HTMLCanvasElement, opts: HeroOptions): P
     last = performance.now();
     raf = requestAnimationFrame(tick);
   };
-  /** A pointer movement over the page brings the settled dust back for another while. */
+  /** A pointer movement or a scroll brings the settled dust back for another while. */
   const wake = () => {
     if (mode !== 'live' || restAt < 0) return;
     restAt = clock + REST_AFTER;

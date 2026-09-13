@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import SectionHead from './SectionHead.astro';
 import WorkImage from './WorkImage.astro';
+import Sheet from './Sheet.astro';
 import { services } from '../data/services';
 import { services as copy, sections } from '../data/copy';
 import { withBase } from '../lib/url';
@@ -41,13 +42,25 @@ const example = (id: string) => work.find((e) => e.id === id);
                       href={withBase(`/work/${ex.id}/`)}
                       class="group/ex focus-ring block w-full rounded-md md:w-80"
                     >
-                      <figure class="overflow-hidden rounded-md bg-ink-900">
-                        <WorkImage
-                          src={ex.data.gallery[0]?.src ?? ex.data.cover}
-                          alt=""
-                          sizes="(min-width: 48rem) 20rem, 100vw"
-                          class="work-img block h-auto w-full group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
-                        />
+                      <figure
+                        class:list={[
+                          'overflow-hidden rounded-md bg-ink-900',
+                          ex.data.placeholder && ex.data.gallery[0]?.src.format === 'svg' ? 'sheet-disclosure' : '',
+                        ]}
+                      >
+                        {ex.data.placeholder && ex.data.gallery[0]?.src.format === 'svg' ? (
+                          <Sheet
+                            src={ex.data.gallery[0].src}
+                            class="work-img group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
+                          />
+                        ) : (
+                          <WorkImage
+                            src={ex.data.gallery[0]?.src ?? ex.data.cover}
+                            alt=""
+                            sizes="(min-width: 48rem) 20rem, 100vw"
+                            class="work-img block h-auto w-full group-hover/ex:scale-[1.03] group-hover/ex:brightness-[1.06] motion-reduce:group-hover/ex:scale-100"
+                          />
+                        )}
                       </figure>
                       <span class="mt-3 block text-label uppercase text-fg-3">{copy.example}</span>
                       <span class="mt-1 block text-sm text-fg transition-colors duration-(--duration-fast) group-hover/ex:text-amber-300">

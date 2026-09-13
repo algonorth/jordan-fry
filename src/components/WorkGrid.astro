@@ -23,14 +23,12 @@ const pattern = [
 ---
 
 <ul class="grid grid-cols-1 gap-x-6 gap-y-14 md:grid-cols-2 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-16">
-  {
-    entries.map((entry, i) => {
-      const p = pattern[i % pattern.length]!;
-      return (
-        <li class:list={[p.span, p.offset, 'md:self-end']} data-reveal>
-          <WorkCard entry={entry} aspect={p.aspect} index={i} />
-        </li>
-      );
-    })
-  }
+  {entries.map((entry, i) => {
+    const p = pattern[i % pattern.length]!;
+    return (
+      <li class:list={[p.span, p.offset, 'md:self-end']} data-reveal>
+        <WorkCard entry={entry} aspect={p.aspect} index={i} />
+      </li>
+    );
+  })}
 </ul>

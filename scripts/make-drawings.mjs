@@ -224,10 +224,13 @@ function sheet(name, [W, H], meta, draw) {
     const rad = 1.2 + rnd() * rnd() * 3.2;
     const op = 0.12 + rnd() * 0.42;
     if (y > H - M - TB - 6) continue; // never over the title block
-    dust.push(`<circle cx="${r(x)}" cy="${r(y)}" r="${r(rad)}" fill="${AMBER}" fill-opacity="${op.toFixed(2)}"/>`);
+    dust.push(
+      `<circle cx="${r(x)}" cy="${r(y)}" r="${r(rad)}" fill="${AMBER}" fill-opacity="${op.toFixed(2)}"/>`,
+    );
   }
 
-  const frame = P.rect(M, M, W - 2 * M, H - 2 * M, 'frame') + P.line(M, H - M - TB, W - M, H - M - TB, 'frame');
+  const frame =
+    P.rect(M, M, W - 2 * M, H - 2 * M, 'frame') + P.line(M, H - M - TB, W - M, H - M - TB, 'frame');
   const content = draw(L, box);
 
   // title block: cells separated by hairlines
@@ -278,7 +281,8 @@ function sheet(name, [W, H], meta, draw) {
 <defs>
 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.3" fill="${LINEN}" fill-opacity=".07"/></pattern>
 <radialGradient id="lamp" cx="${lx}" cy="${ly}" r="0.9"><stop offset="0" stop-color="${AMBER}" stop-opacity=".22"/><stop offset=".45" stop-color="${AMBER}" stop-opacity=".06"/><stop offset="1" stop-color="${AMBER}" stop-opacity="0"/></radialGradient>
-<filter id="paper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${hash(name) % 977}" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .88 0 0 0 .035 0"/></filter>
+<filter id="noise" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${hash(name) % 977}" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .88 0 0 0 .035 0"/></filter>
+<pattern id="paper" width="180" height="180" patternUnits="userSpaceOnUse"><rect width="180" height="180" filter="url(#noise)"/></pattern>
 </defs>
 <rect width="${W}" height="${H}" fill="${INK}"/>
 <g class="ground"><rect width="${W}" height="${H}" fill="url(#grid)"/><rect width="${W}" height="${H}" fill="url(#lamp)"/></g>
@@ -287,7 +291,7 @@ ${frame}
 <defs>${hatchDefs()}</defs>
 <g class="drawing">${content}</g>
 <g class="tb">${cells.join('')}</g>
-<rect class="paper" width="${W}" height="${H}" filter="url(#paper)"/>
+<rect class="paper" width="${W}" height="${H}" fill="url(#paper)"/>
 ${L.defsSvg()}
 </svg>
 `);

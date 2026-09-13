@@ -252,29 +252,32 @@ html:has(dialog[open]) {
 }
 
 /*
- * Inline drawing sheets (Sheet.astro) draft themselves when their [data-reveal] group enters: the
- * ground is there at once, solid lines draw in drafting order over ~2s (each element carries its
- * order in --k and the sheet its count in --n), then hatch, fills, hidden lines, lettering, the
- * title block and the dust fade in. A `.sheet-frame` figure has no wipe: the sheet is the reveal.
+ * Inline drawing sheets (Sheet.astro) draft themselves: in a `.sheet-frame` when its [data-reveal]
+ * group enters, in a `.sheet-disclosure` when its services row opens. The ground is there at once,
+ * solid lines draw in drafting order over ~2s (each element carries its order in --k and the sheet
+ * its count in --n), then hatch, guide lines, fills, hidden lines and dust fade in, and finally the
+ * lettering and the title block. A `.sheet-frame` figure has no wipe: the sheet is the reveal.
  */
-.js [data-reveal] .sheet :is(.o, .s, .d, .frame) {
+.js :is([data-reveal] .sheet-frame, details .sheet-disclosure) .sheet :is(.o, .s, .d, .frame) {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   transition: stroke-dashoffset 0.8s var(--ease-out-soft)
     calc(var(--k, 0) / max(var(--n, 1), 1) * 1.9s + 0.1s);
 }
-.js [data-reveal] .sheet :is(.f, .f2, .hh, .x, .dot, .dust) {
+.js :is([data-reveal] .sheet-frame, details .sheet-disclosure) .sheet :is(.f, .f2, .h, .hh, .x, .dot, .dust) {
   opacity: 0;
   transition: opacity 0.9s var(--ease-out-soft) 1.4s;
 }
-.js [data-reveal] .sheet :is(.t, .tb) {
+.js :is([data-reveal] .sheet-frame, details .sheet-disclosure) .sheet :is(.t, .tb) {
   opacity: 0;
   transition: opacity 0.9s var(--ease-out-soft) 2s;
 }
-[data-reveal].is-in .sheet :is(.o, .s, .d, .frame) {
+:is([data-reveal].is-in .sheet-frame, details[open] .sheet-disclosure) .sheet :is(.o, .s, .d, .frame) {
   stroke-dashoffset: 0;
 }
-[data-reveal].is-in .sheet :is(.f, .f2, .hh, .x, .dot, .dust, .t, .tb) {
+:is([data-reveal].is-in .sheet-frame, details[open] .sheet-disclosure)
+  .sheet
+  :is(.f, .f2, .h, .hh, .x, .dot, .dust, .t, .tb) {
   opacity: 1;
 }
 .js [data-reveal] .sheet-frame .card-meta,
@@ -328,8 +331,10 @@ html[data-motion='static'] {
   & ::before,
   & ::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
   &::view-transition-group(*),
@@ -351,10 +356,10 @@ html[data-motion='static'] {
   [data-reveal] .reveal-img .work-img {
     scale: 1;
   }
-  [data-reveal] .sheet :is(.o, .s, .d, .frame) {
+  .sheet :is(.o, .s, .d, .frame) {
     stroke-dashoffset: 0;
   }
-  [data-reveal] .sheet :is(.f, .f2, .hh, .x, .dot, .dust, .t, .tb) {
+  .sheet :is(.f, .f2, .h, .hh, .x, .dot, .dust, .t, .tb) {
     opacity: 1;
   }
   /* The particle hero ignores the OS flag (see lib/hero/index.ts); keep its handoff fades intact. */
