@@ -31,19 +31,40 @@
 <script is:inline>
   // Pre-paint capability probe (a few ms). Devices without a usable GPU never download the three.js
   // chunk and never hide the headline. `?gl=software` allows a software renderer (tests).
+  // The verdict is kept on `window.__heroProbe` for the `?debug=hero` readout.
   (function () {
-    if (!('WebGL2RenderingContext' in window)) return;
+    var probe = { ok: false, why: '', renderer: '' };
+    window.__heroProbe = probe;
     try {
+      if (!('WebGL2RenderingContext' in window)) {
+        probe.why = 'this browser has no WebGL2';
+        return;
+      }
       var soft = /[?&]gl=software(?:&|$)/.test(location.search);
       var gl = document
         .createElement('canvas')
         .getContext('webgl2', { failIfMajorPerformanceCaveat: !soft });
-      if (!gl) return;
-      var lose = gl.getExtension('WEBGL_lose_context');
-      if (lose) lose.loseContext();
-      document.documentElement.dataset.heroIntro = 'pending';
+      if (!gl) {
+        // Distinguish "no context at all" from "context refused as slow" for the readout only.
+        var any = document.createElement('canvas').getContext('webgl2');
+        probe.why = any
+          ? 'WebGL2 refused: the browser reports a major performance caveat (software rendering)'
+          : 'WebGL2 context could not be created';
+        gl = any;
+      } else {
+        probe.ok = true;
+        document.documentElement.dataset.heroIntro = 'pending';
+      }
+      if (gl) {
+        var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        probe.renderer = String(
+          gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
+        );
+        var lose = gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+      }
     } catch (e) {
-      /* no hero */
+      probe.why = 'probe threw: ' + e;
     }
   })();
 </script>
@@ -55,33 +76,87 @@
   const heroEl = document.querySelector<HTMLElement>('[data-hero]');
   const params = new URLSearchParams(location.search);
   const allowSoftwareGL = params.get('gl') === 'software';
+  const debug = params.get('debug') === 'hero';
   const pending = document.documentElement.dataset.heroIntro === 'pending';
   /** Lets the headline show. Live mode calls it on its first frame, after `.is-forming` took over. */
   const reveal = () => {
     delete document.documentElement.dataset.heroIntro;
   };
+
+  // `?debug=hero`: an on-screen readout of every decision the hero makes, for devices without
+  // devtools. Also mirrors console errors and warnings (three.js reports shader failures there).
+  type Probe = { ok: boolean; why: string; renderer: string };
+  const probe = (window as Window & { __heroProbe?: Probe }).__heroProbe;
+  const log = (() => {
+    if (!debug) return (_: string) => {};
+    const pre = document.createElement('pre');
+    pre.id = 'hero-debug';
+    pre.style.cssText =
+      'position:fixed;left:8px;right:8px;bottom:8px;z-index:200;margin:0;padding:10px 12px;' +
+      'max-height:45vh;overflow:auto;font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap;' +
+      'color:#fff1d6;background:rgba(0,0,0,.82);border:1px solid rgba(233,162,59,.5);border-radius:6px';
+    document.body.appendChild(pre);
+    const t0 = performance.now();
+    const line = (msg: string) => {
+      pre.textContent += `${((performance.now() - t0) / 1000).toFixed(2)}s  ${msg}\n`;
+      pre.scrollTop = pre.scrollHeight;
+    };
+    for (const level of ['error', 'warn'] as const) {
+      const orig = console[level].bind(console);
+      console[level] = (...args: unknown[]) => {
+        orig(...args);
+        line(`${level}: ${args.map((a) => (a instanceof Error ? a.message : String(a))).join(' ')}`);
+      };
+    }
+    addEventListener('error', (e) => line(`uncaught: ${e.message}`));
+    addEventListener('unhandledrejection', (e) => line(`rejection: ${String(e.reason)}`));
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    line(`ua: ${navigator.userAgent}`);
+    line(
+      `device: ${innerWidth}x${innerHeight} @${devicePixelRatio}x, cores ${navigator.hardwareConcurrency ?? '?'}, ` +
+        `memory ${nav.deviceMemory ?? '?'}GB, coarse ${matchMedia('(pointer: coarse)').matches}, ` +
+        `reduced-motion ${matchMedia('(prefers-reduced-motion: reduce)').matches} (ignored), ` +
+        `reduced-data ${matchMedia('(prefers-reduced-data: reduce)').matches}`,
+    );
+    line(probe ? `probe: ${probe.ok ? 'ok' : 'FAILED, ' + probe.why}` : 'probe: did not run');
+    if (probe?.renderer) line(`gpu: ${probe.renderer}`);
+    line(`headline hidden for intro: ${pending}`);
+    return line;
+  })();
+
   if (canvas && nameEl && heroEl && pending) {
     // Safety net: if the hero has not rendered a frame within a few seconds of load, show the name.
-    const guard = setTimeout(reveal, 6000);
-    const start = () =>
+    const guard = setTimeout(() => {
+      log('no frame after 6s: showing the headline');
+      reveal();
+    }, 6000);
+    const start = () => {
+      log('loading the particle module');
       import('../lib/hero')
-        .then((m) =>
-          m.mountHero(canvas, {
+        .then((m) => {
+          log('module loaded, mounting');
+          return m.mountHero(canvas, {
             nameEl,
             heroEl,
             allowSoftwareGL,
             reducedMotion: params.get('motion') === 'static',
-            debug: params.get('debug') === 'hero',
+            debug,
             onReady: () => {
               clearTimeout(guard);
               reveal();
+              log('first frame rendered');
             },
-          }),
-        )
+          });
+        })
         .then((h) => {
+          log(`mounted: mode ${h.mode}, tier ${h.tier} (${[60000, 24000, 8000][h.tier]} motes)`);
           if (h.mode !== 'live') reveal();
         })
-        .catch(reveal);
+        .catch((e: unknown) => {
+          log(`mount failed: ${e instanceof Error ? e.message : String(e)}`);
+          reveal();
+        });
+    };
     const schedule = () =>
       'requestIdleCallback' in window
         ? requestIdleCallback(start, { timeout: 1500 })

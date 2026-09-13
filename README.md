@@ -67,5 +67,6 @@ picked from the device and stepped down if frames run long. The hero ignores the
 flag on purpose (Windows reports it whenever "Show animations in Windows" is off); `?motion=static`
 renders one still frame. Without WebGL the CSS light shaft and the headline are the designed state.
 
-Debugging: `/?debug=hero` overlays the sampled glyph targets on the headline; `/?gl=software` allows
-software WebGL (used by the tests).
+Debugging: `/?debug=hero` shows an on-screen readout of every decision the hero makes (GPU probe
+verdict and renderer, tier, mount result, mirrored console errors such as shader failures) and overlays
+the sampled glyph targets on the headline; `/?gl=software` allows software WebGL (used by the tests).
